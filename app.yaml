@@ -1,2 +1,13 @@
 runtime: custom
 vm: true
+
+resources:
+    cpu: 0.5
+    memory_gb: 0.6
+    disk_size_gb: 10
+
+manual_scaling:
+    instances: 1
+
+beta_settings:
+    machine_type: f1-micro
