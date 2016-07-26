@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Daphne <machinegirl@eternalvoid.net>"]
 
 [dependencies]
-iron = "*"
-mount = "*"
-staticfile = "*"
+iron = "0.4.0"
+mount = { git="https://github.com/iron/mount.git", branch="master" }
+staticfile = { git="https://github.com/iron/staticfile.git", version="0.3.0" }
 router = "*"
