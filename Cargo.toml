@@ -5,3 +5,6 @@ authors = ["Daphne <machinegirl@eternalvoid.net>"]
 
 [dependencies]
 iron = "*"
+mount = "*"
+staticfile = "*"
+router = "*"
