@@ -6,7 +6,7 @@
       "modules": "webpack",
       "js": "typescript",
       "css": "less",
-      "resolved": "/home/bakeonandham/.npm-global/lib/node_modules/generator-fountain-webapp/node_modules/generator-fountain-angular2/generators/app/index.js",
+      "resolved": "/home/bakeonandham/.npm/lib/node_modules/generator-fountain-webapp/node_modules/generator-fountain-angular2/generators/app/index.js",
       "namespace": "fountain-angular2",
       "argv": {
         "remain": [],
