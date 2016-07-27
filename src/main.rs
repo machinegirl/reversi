@@ -52,7 +52,7 @@ fn main() {
 	let mut mount = Mount::new();
 	mount
 		.mount("/api", router)
-		.mount("/", Static::new(Path::new("static/")));
+		.mount("/", Static::new(Path::new("static/dist/")));
 
 	Iron::new(mount).http(host_addr).unwrap();
 }
