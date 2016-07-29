@@ -25,42 +25,46 @@ fn say_hello(req: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
-	let host_port = 8080; //Note: port must be 8080 for GAE
-	let hostname_cmd = Command::new("hostname").arg("-I").output();
-	let host_addr: SocketAddrV4 = match hostname_cmd {
-		Ok(res) => {
-			let addr = str::from_utf8(res.stdout.as_slice())
-				.map_err(|err| err.to_string())
-				.and_then(|ip_str| ip_str.trim()
-					.parse::<Ipv4Addr>()
-					.map_err(|err| err.to_string()))
-				.map(|ip| SocketAddrV4::new(ip, host_port));
-			match addr {
-				Ok(addr) => addr,
+	mioco::start(|| {
+		let webserver_thread = mioco::spawn(|| {
+			let host_port = 8080; //Note: port must be 8080 for GAE
+			let hostname_cmd = Command::new("hostname").arg("-I").output();
+			let host_addr: SocketAddrV4 = match hostname_cmd {
+				Ok(res) => {
+					let addr = str::from_utf8(res.stdout.as_slice())
+						.map_err(|err| err.to_string())
+						.and_then(|ip_str| ip_str.trim()
+							.parse::<Ipv4Addr>()
+							.map_err(|err| err.to_string()))
+						.map(|ip| SocketAddrV4::new(ip, host_port));
+					match addr {
+						Ok(addr) => addr,
+						Err(_) => {
+							let ip = Ipv4Addr::new(127, 0, 0, 1);
+							SocketAddrV4::new(ip, host_port)
+						}
+					}
+				},
 				Err(_) => {
 					let ip = Ipv4Addr::new(127, 0, 0, 1);
 					SocketAddrV4::new(ip, host_port)
 				}
-			}
-		},
-		Err(_) => {
-			let ip = Ipv4Addr::new(127, 0, 0, 1);
-			SocketAddrV4::new(ip, host_port)
-		}
-	};
-	println!("Web server listening at http://{}", host_addr);
+			};
+			println!("Web server listening at http://{}", host_addr);
 
-	// API routes
-	let mut router = Router::new();
-	router.get("/hello", say_hello);
+			// API routes
+			let mut router = Router::new();
+			router.get("/hello", say_hello);
 
-	let mut mount = Mount::new();
-	mount
-		.mount("/api", router)
-		.mount("/", Static::new(Path::new("static/dist/")));
+			let mut mount = Mount::new();
+			mount
+				.mount("/api", router)
+				.mount("/", Static::new(Path::new("static/dist/")));
 
-	mioco::start(|| {
-		mioco::spawn(move || {
+			Iron::new(mount).http(host_addr).unwrap();
+		});
+
+		let websocket_server_thread = mioco::spawn(|| {
 			let websocket_host = "127.0.0.1:8055";
 			let server = Server::bind(websocket_host).unwrap();
 			println!("WebSocket server listening at ws://{}", websocket_host);
@@ -113,7 +117,9 @@ fn main() {
 				});
 			}
 		});
-	}).unwrap();
 
-	Iron::new(mount).http(host_addr).unwrap();
+		// websocket_server_thread.join().unwrap();
+		// webserver_thread.join().unwrap();
+
+	}).unwrap();
 }
