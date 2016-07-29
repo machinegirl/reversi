@@ -98,6 +98,8 @@ fn main() {
 				for message in receiver.incoming_messages() {
 					let message: Message = message.unwrap();
 
+					println!("WebSocket msg: {:?}", message);
+
 					match message.opcode {
 						Type::Close => {
 							let message = Message::close();
