@@ -98,7 +98,7 @@ fn main() {
 				for message in receiver.incoming_messages() {
 					let message: Message = message.unwrap();
 
-					println!("WebSocket msg: {:?}", message);
+					println!("WebSocket msg: {}", String::from_utf8_lossy(&message.payload.clone().into_owned()));
 
 					match message.opcode {
 						Type::Close => {
