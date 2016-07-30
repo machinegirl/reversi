@@ -17,7 +17,13 @@ export class Hello {
 	let onopen = function(evt) {
 		if (sock && sock.readyState === 1) {
 
-			if (sock3 && (sock3.readyState === 0 || sock3.readyState === 1)) {
+			if (sock2 && (sock2.readyState === 1)) {
+				sock2.onclose = undefined;
+				sock2.close();
+				sock2 = undefined;
+			}
+
+			if (sock3 && (sock3.readyState === 1)) {
 				sock3.onclose = undefined;
 				sock3.close();
 				sock3 = undefined;
@@ -29,7 +35,13 @@ export class Hello {
 
 		if (sock2 && sock2.readyState === 1) {
 
-			if (sock3 && (sock3.readyState === 0 || sock3.readyState === 1)) {
+			if (sock && (sock.readyState === 1)) {
+				sock.onclose = undefined;
+				sock.close();
+				sock = undefined;
+			}
+
+			if (sock3 && (sock3.readyState === 1)) {
 				sock3.onclose = undefined;
 				sock3.close();
 				sock3 = undefined;
@@ -40,24 +52,35 @@ export class Hello {
 		}
 
 		if (sock3 && sock3.readyState === 1) {
+
+			if (sock && (sock.readyState === 1)) {
+				sock.onclose = undefined;
+				sock.close();
+				sock = undefined;
+			}
+
+			if (sock2 && (sock2.readyState === 1)) {
+				sock2.onclose = undefined;
+				sock2.close();
+				sock2 = undefined;
+			}
+
 			sock3.send('client socket opened');
 			sock3.send(JSON.stringify(evt));
 		}
 	};
 
 	let onmessage = function(evt) {
-		console.log('!!');
+		console.log('websocket msg');
 		console.log(evt);
 	};
 
 	let onerror = function(err) {
-		console.log('ERROR');
+		console.log('Error');
 		console.log(err);
 	};
 
-	let onclose1 = function(evt) {
-		console.log('connection closed');
-		console.log(evt);
+	let onclose1 = function() {
 		window.setTimeout(function() {
 			try {
 				window.setTimeout(function() {
@@ -69,22 +92,11 @@ export class Hello {
 						sock.onerror = onerror;
 					}
 				}, 0);
-				window.setTimeout(function() {
-					if (sock3 && (sock3.readyState === 2 || sock3.readyState === 3)) {
-						sock3 = new WebSocket('ws://104.196.159.79:8055', 'rust-websocket');
-						if (sock3) {
-							sock3.onclose = onclose3;
-							sock3.onopen = onopen;
-							sock3.onmessage = onmessage;
-							sock3.onerror = onerror;
-						}
-					}
-				}, 0);
 			} catch (err) {
 				console.log(err);
 				return;
 			}
-		}, 2500);
+		}, 5000);
 	};
 
 	let onclose2 = function(evt) {
@@ -99,22 +111,11 @@ export class Hello {
 						sock2.onerror = onerror;
 					}
 				}, 0);
-				window.setTimeout(function() {
-					if (sock3 && (sock3.readyState === 2 || sock3.readyState === 3)) {
-						sock3 = new WebSocket('ws://104.196.159.79:8055', 'rust-websocket');
-						if (sock3) {
-							sock3.onclose = onclose3;
-							sock3.onopen = onopen;
-							sock3.onmessage = onmessage;
-							sock3.onerror = onerror;
-						}
-					}
-				}, 0);
 			} catch (err) {
 				console.log(err);
 				return;
 			}
-		}, 2500);
+		}, 5000);
 	};
 
 	let onclose3 = function(evt) {
@@ -129,33 +130,11 @@ export class Hello {
 						sock3.onerror = onerror;
 					}
 				}, 0);
-				window.setTimeout(function() {
-					if (sock && (sock.readyState === 2 || sock.readyState === 3)) {
-						sock = new WebSocket('ws://127.0.0.1:8055', 'rust-websocket');
-						if (sock) {
-							sock.onclose = onclose1;
-							sock.onopen = onopen;
-							sock.onmessage = onmessage;
-							sock.onerror = onerror;
-						}
-					}
-				}, 0);
-				window.setTimeout(function() {
-					if (sock2 && (sock2.readyState === 2 || sock2.readyState === 3)) {
-						sock2 = new WebSocket('ws://172.17.0.2:8055', 'rust-websocket');
-						if (sock2) {
-							sock2.onclose = onclose2;
-							sock2.onopen = onopen;
-							sock2.onmessage = onmessage;
-							sock2.onerror = onerror;
-						}
-					}
-				}, 0);
 			} catch (err) {
 				console.log(err);
 				return;
 			}
-		}, 2500);
+		}, 5000);
 	};
 
 	try {
@@ -168,7 +147,6 @@ export class Hello {
 				sock.onerror = onerror;
 			}
 		}, 0);
-
 		window.setTimeout(function() {
 			sock2 = new WebSocket('ws://172.17.0.2:8055', 'rust-websocket');
 			if (sock2) {
@@ -178,8 +156,12 @@ export class Hello {
 				sock2.onerror = onerror;
 			}
 		}, 0);
-
 		window.setTimeout(function() {
+
+			if (sock.readyState === 1 || sock2.readyState === 1) {
+				return;
+			}
+
 			sock3 = new WebSocket('ws://104.196.159.79:8055', 'rust-websocket');
 			if (sock3) {
 				sock3.onclose = onclose3;
@@ -187,10 +169,42 @@ export class Hello {
 				sock3.onmessage = onmessage;
 				sock3.onerror = onerror;
 			}
+
 		}, 0);
 	} catch (err) {
 		console.log(err);
 		return;
 	}
+
+	window.setInterval(function() {
+		if (sock && sock.readyState === 1) {
+			if (sock2 && sock2.readyState === 1) {
+				console.log('local websocket server detected, disconnecting from docker websocket server');
+				sock2.onclose = undefined;
+				sock2.close();
+				sock2 = undefined;
+			}
+			if (sock3 && sock3.readyState === 1) {
+				console.log('local websocket server detected, disconnecting from app engine websocket server');
+				sock3.onclose = undefined;
+				sock3.close();
+				sock3 = undefined;
+			}
+		}
+		if (sock2 && sock2.readyState === 1) {
+			if (sock && sock.readyState === 1) {
+				console.log('docker websocket server detected, disconnecting from local websocket server');
+				sock.onclose = undefined;
+				sock.close();
+				sock = undefined;
+			}
+			if (sock3 && sock3.readyState === 1) {
+				console.log('docker websocket server detected, disconnecting from app engine websocket server');
+				sock3.onclose = undefined;
+				sock3.close();
+				sock3 = undefined;
+			}
+		}
+	}, 5000);
   }
 }
