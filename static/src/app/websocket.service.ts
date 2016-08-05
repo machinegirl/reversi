@@ -1,14 +1,9 @@
-import {Component} from '@angular/core';
+import { Injectable } from '@angular/core';
 
-@Component({
-  selector: 'App',
-  template: require('./hello.html')
-})
-export class Hello {
-  public hello: string;
+@Injectable()
+export class WebsocketService {
 
-  constructor() {
-    this.hello = 'Hello World!';
+  init() {
 	let sock;
 	let interval;
 	let onopen = function(evt) {

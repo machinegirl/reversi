@@ -2,10 +2,10 @@
 
 import {Injectable} from '@angular/core';
 import {UIRouter} from 'ui-router-ng2/router';
-import {Hello} from './app/hello';
+import {Main} from './app/main';
 
 const INITIAL_STATES: any[] = [
-  {name: 'App', url: '/', component: Hello}
+  {name: 'App', url: '/', component: Main}
 ];
 
 @Injectable()

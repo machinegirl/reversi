@@ -5,6 +5,7 @@ import 'zone.js/dist/zone';
 import {bootstrap} from '@angular/platform-browser-dynamic';
 
 import './index.less';
+import './main.less';
 
 import {enableProdMode, provide} from '@angular/core';
 import {UIRouterConfig, UIROUTER_PROVIDERS, UiView} from 'ui-router-ng2';
