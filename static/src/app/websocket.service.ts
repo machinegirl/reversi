@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import {ReversiService} from './reversi.service';
 
 @Injectable()
 export class WebsocketService {
@@ -25,6 +26,7 @@ export class WebsocketService {
 
 			sock.send('client socket opened');
 			sock.send(JSON.stringify(evt));
+			ReversiService.startGame(sock);
 		}
 
 		if (sock2 && sock2.readyState === 1) {
@@ -43,6 +45,7 @@ export class WebsocketService {
 
 			sock2.send('client socket opened');
 			sock2.send(JSON.stringify(evt));
+			ReversiService.startGame(sock2);
 		}
 
 		if (sock3 && sock3.readyState === 1) {
@@ -61,6 +64,7 @@ export class WebsocketService {
 
 			sock3.send('client socket opened');
 			sock3.send(JSON.stringify(evt));
+			ReversiService.startGame(sock3);
 		}
 	};
 
