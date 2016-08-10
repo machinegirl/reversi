@@ -11,7 +11,7 @@ export class Main implements OnInit {
 
   constructor(private websocketService: WebsocketService, private reversiService: ReversiService) {
 	//   reversiService.gameBoard = gameBoard;
-	  console.log("main controller started");
+	  console.log('main controller started');
   }
 
   ngOnInit() {
