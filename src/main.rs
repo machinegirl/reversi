@@ -22,6 +22,31 @@ use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
+#[derive(Debug)]
+struct Game<'a> {
+	board: [[u8; 8]; 8],
+	players: [Player<'a>; 2]
+}
+
+impl<'a> Game<'a> {
+	fn new() -> Game<'a> {
+		let gb = Game{
+			board: [[0u8; 8]; 8],
+			players: [Player{
+				auto_pilot: true,
+				name: ""
+			}; 2]
+		};
+		return gb;
+	}
+}
+
+#[derive(Debug, Copy, Clone)]
+struct Player<'a> {
+	auto_pilot: bool,
+	name: &'a str
+}
+
 fn say_hello(req: &mut Request) -> IronResult<Response> {
 	println!("Running say_hello handler, URL path: {}", req.url.path().join("/"));
 	Ok(Response::with((status::Ok, "This request was routed!")))
@@ -112,8 +137,13 @@ fn main() {
 										Type::Ping => {
 											let message = Message::pong(message.payload);
 											sender.send_message(&message).unwrap();
+										},
+										// TODO: if message is start_game
+										_ => {
+											let game = Game::new();
+											println!("game: {:?}", game);
+											sender.send_message(&message).unwrap();
 										}
-										_ => sender.send_message(&message).unwrap(),
 									}
 								}
 							});
