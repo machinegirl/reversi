@@ -25,12 +25,11 @@ use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-// use serde_json::Map;
 
 #[derive(Debug)]
 struct Game<'a> {
-	board: [[u8; 8]; 8],
-	players: [Player<'a>; 2]
+	board:		[[u8; 8]; 8],
+	players:	[Player<'a>; 2],
 }
 
 impl<'a> Game<'a> {
@@ -48,18 +47,20 @@ impl<'a> Game<'a> {
 
 #[derive(Debug, Copy, Clone)]
 struct Player<'a> {
-	auto_pilot: bool,
-	name: &'a str
+	auto_pilot:	bool,
+	name:		&'a str,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Msg {
-	cmd: String
+	cmd: Option<String>,
+	is_trusted: Option<bool>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct MsgStartGame {
-	cmd: String
+	cmd:	String,
+	id:		Option<String>,
 }
 
 fn say_hello(req: &mut Request) -> IronResult<Response> {
@@ -153,34 +154,58 @@ fn main() {
 											let message = Message::pong(message.payload);
 											sender.send_message(&message).unwrap();
 										},
-
 										_ => {
-
-											// sender.send_message(&message).unwrap();
-
-											// TODO: if message is start_game
 											match serde_json::from_str::<Msg>(&String::from_utf8_lossy(&*message.payload)) {
 												Ok(msg) => {
-													// println!("!! msg: {:?}", msg);
+													match msg.cmd {
+														Some(cmd) => {
+															match &cmd[..] {
+																"start_game" => {
 
-													match &msg.cmd[..] {
-														"start_game" => {
-															println!("!!! starting game !!!");
-															let game = Game::new();
-															println!("game: {:?}", game);
+																	// unmarshal to more specific data Type
+
+																	match serde_json::from_str::<MsgStartGame>(&String::from_utf8_lossy(&*message.payload)) {
+																		Ok(msg) => {
+																			match msg.id {
+																				Some(id) => {
+																					// Load existing game by id
+																					println!("!!! loading game {} !!!", id);
+
+																					if id == "" {
+																						// Start new game
+																						println!("!!! starting new game !!!");
+																						let game = Game::new();
+																						println!("game: {:?}", game);
+																					}
+																				},
+																				None => {
+																					// Start new game
+																					println!("!!! starting new game !!!");
+																					let game = Game::new();
+																					println!("game: {:?}", game);
+																				}
+																			}
+																		},
+																		Err(e) => {
+																			println!("Error: {:?}", e);
+																		}
+																	}
+
+
+																},
+																_ => {
+																	println!("Error: Cmd not understood");
+																}
+															}
 														},
-														_ => {
-															println!("Error: Cmd not understood");
+														None => {
 														}
 													}
 												},
-
 												Err(e) => {
 													println!("Error: {:?}", e);
 												}
 											}
-
-
 										}
 									}
 								}
