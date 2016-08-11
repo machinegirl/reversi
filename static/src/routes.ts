@@ -3,9 +3,11 @@
 import {Injectable} from '@angular/core';
 import {UIRouter} from 'ui-router-ng2/router';
 import {Main} from './app/main';
+import {Play} from './app/play';
 
 const INITIAL_STATES: any[] = [
-  {name: 'App', url: '/', component: Main}
+  {name: 'App', url: '/', component: Main},
+  {name: 'Play', url: '/play', component: Play}
 ];
 
 @Injectable()
