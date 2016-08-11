@@ -1,4 +1,6 @@
-import { Component, OnInit} from '@angular/core';
+import { Component, OnInit, Input} from '@angular/core';
+
+declare var gapi: any;
 
 @Component({
   selector: 'App',
@@ -7,12 +9,19 @@ import { Component, OnInit} from '@angular/core';
 })
 export class Main implements OnInit {
 
+  @Input() public main: Main;
+
   constructor() {
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('main controller started');
   }
 
+  onSignIn(googleUser) {
+	  let profile = googleUser.getBasicProfile();
+	  console.log('Name: ' + profile.getName);
+  }
+
   ngOnInit() {
 
-  }
+    }
 }
