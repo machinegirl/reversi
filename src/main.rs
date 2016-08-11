@@ -63,6 +63,12 @@ struct MsgStartGame {
 	id:		Option<String>,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgMsg {
+	cmd: String,
+	msg: String,
+}
+
 fn say_hello(req: &mut Request) -> IronResult<Response> {
 	println!("Running say_hello handler, URL path: {}", req.url.path().join("/"));
 	Ok(Response::with((status::Ok, "This request was routed!")))
@@ -169,13 +175,14 @@ fn main() {
 																			match msg.id {
 																				Some(id) => {
 																					// Load existing game by id
-																					println!("!!! loading game {} !!!", id);
-
 																					if id == "" {
 																						// Start new game
 																						println!("!!! starting new game !!!");
 																						let game = Game::new();
 																						println!("game: {:?}", game);
+
+																					} else {
+																						println!("!!! loading game {} !!!", id);
 																					}
 																				},
 																				None => {
@@ -192,6 +199,17 @@ fn main() {
 																	}
 
 
+																},
+																"msg" => {
+
+																	match serde_json::from_str::<MsgMsg>(&String::from_utf8_lossy(&*message.payload)) {
+																		Ok(msg) => {
+																			println!("msg from websocket client: {}", msg.msg);
+																		},
+																		Err(e) => {
+																			println!("Error: {:?}", e);
+																		}
+																	}
 																},
 																_ => {
 																	println!("Error: Cmd not understood");
