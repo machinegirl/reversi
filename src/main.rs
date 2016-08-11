@@ -1,9 +1,13 @@
 #![allow(unused_assignments)]
+#![feature(custom_derive, plugin)]
+#![plugin(serde_macros)]
 extern crate iron;
 extern crate staticfile;
 extern crate mount;
 extern crate router;
 extern crate websocket;
+extern crate serde;
+extern crate serde_json;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -21,6 +25,7 @@ use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+// use serde_json::Map;
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -45,6 +50,16 @@ impl<'a> Game<'a> {
 struct Player<'a> {
 	auto_pilot: bool,
 	name: &'a str
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct Msg {
+	cmd: String
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgStartGame {
+	cmd: String
 }
 
 fn say_hello(req: &mut Request) -> IronResult<Response> {
@@ -138,11 +153,34 @@ fn main() {
 											let message = Message::pong(message.payload);
 											sender.send_message(&message).unwrap();
 										},
-										// TODO: if message is start_game
+
 										_ => {
-											let game = Game::new();
-											println!("game: {:?}", game);
-											sender.send_message(&message).unwrap();
+
+											// sender.send_message(&message).unwrap();
+
+											// TODO: if message is start_game
+											match serde_json::from_str::<Msg>(&String::from_utf8_lossy(&*message.payload)) {
+												Ok(msg) => {
+													// println!("!! msg: {:?}", msg);
+
+													match &msg.cmd[..] {
+														"start_game" => {
+															println!("!!! starting game !!!");
+															let game = Game::new();
+															println!("game: {:?}", game);
+														},
+														_ => {
+															println!("Error: Cmd not understood");
+														}
+													}
+												},
+
+												Err(e) => {
+													println!("Error: {:?}", e);
+												}
+											}
+
+
 										}
 									}
 								}

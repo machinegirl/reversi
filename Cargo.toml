@@ -9,3 +9,6 @@ mount = { git="https://github.com/iron/mount.git", branch="master" }
 staticfile = { git="https://github.com/iron/staticfile.git", version="0.3.0" }
 router = "*"
 websocket = "0.17.1"
+serde = "0.8"
+serde_json = "0.8"
+serde_macros = "0.8"
