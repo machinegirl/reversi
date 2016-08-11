@@ -24,7 +24,7 @@ export class WebsocketService {
 	  		if (sock.readyState === 1) {
 				console.log('connected to ' + sockAddr);
 	  			sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
-	  			ReversiService.startGame(sock);
+				// 		ReversiService.startGame(sock);
 	  		}
 	  	};
 
