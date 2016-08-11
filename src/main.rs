@@ -8,6 +8,7 @@ extern crate router;
 extern crate websocket;
 extern crate serde;
 extern crate serde_json;
+// extern crate hyper;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -25,6 +26,9 @@ use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+// use std::io::Read;
+// use hyper::Client;
+// use hyper::header::Connection;
 
 #[derive(Debug)]
 struct Game<'a> {
