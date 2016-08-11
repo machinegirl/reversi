@@ -73,6 +73,12 @@ struct MsgMsg {
 	msg: String,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgLogin {
+	cmd: String,
+	id_token: String,
+}
+
 fn say_hello(req: &mut Request) -> IronResult<Response> {
 	println!("Running say_hello handler, URL path: {}", req.url.path().join("/"));
 	Ok(Response::with((status::Ok, "This request was routed!")))
@@ -209,6 +215,16 @@ fn main() {
 																	match serde_json::from_str::<MsgMsg>(&String::from_utf8_lossy(&*message.payload)) {
 																		Ok(msg) => {
 																			println!("msg from websocket client: {}", msg.msg);
+																		},
+																		Err(e) => {
+																			println!("Error: {:?}", e);
+																		}
+																	}
+																},
+																"login" => {
+																	match serde_json::from_str::<MsgLogin>(&String::from_utf8_lossy(&*message.payload)) {
+																		Ok(msg) => {
+																			println!("logging into backend with id token: {}", msg.id_token);
 																		},
 																		Err(e) => {
 																			println!("Error: {:?}", e);
