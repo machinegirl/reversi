@@ -24,7 +24,7 @@ export class WebsocketService {
 				sock3 = undefined;
 			}
 
-			sock.send('client socket opened');
+			sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
 			sock.send(JSON.stringify(evt));
 			ReversiService.startGame(sock);
 		}
@@ -43,7 +43,7 @@ export class WebsocketService {
 				sock3 = undefined;
 			}
 
-			sock2.send('client socket opened');
+			sock2.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
 			sock2.send(JSON.stringify(evt));
 			ReversiService.startGame(sock2);
 		}
@@ -62,7 +62,7 @@ export class WebsocketService {
 				sock2 = undefined;
 			}
 
-			sock3.send('client socket opened');
+			sock3.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
 			sock3.send(JSON.stringify(evt));
 			ReversiService.startGame(sock3);
 		}

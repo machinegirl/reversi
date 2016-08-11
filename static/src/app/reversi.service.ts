@@ -4,7 +4,10 @@ import { Injectable} from '@angular/core';
 export class ReversiService {
 
 	public static startGame(sockHandle) {
-		let msg = {'cmd': 'start_game'};
+		let msg = {
+			'cmd': 'start_game',
+			'id': ''
+		};
 		sockHandle.send(JSON.stringify(msg));
 	}
 
