@@ -1,11 +1,13 @@
 import { Component, OnInit} from '@angular/core';
 import {WebsocketService} from './websocket.service';
 import {ReversiService} from './reversi.service';
+import {Header} from './header';
 
 @Component({
   selector: 'Play',
   template: require('./play.html'),
   providers: [WebsocketService, ReversiService],
+  directives: [Header]
 })
 export class Play implements OnInit {
 

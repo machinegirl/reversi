@@ -1,10 +1,13 @@
 import { Component, OnInit, Input} from '@angular/core';
 import {WebsocketService} from './websocket.service';
+import {Header} from './header';
+
 
 @Component({
   selector: 'App',
   template: require('./main.html'),
   providers: [WebsocketService],
+  directives: [Header]
 })
 export class Main implements OnInit {
 
