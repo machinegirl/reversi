@@ -15,6 +15,8 @@ import {BrowserPlatformLocation} from '@angular/platform-browser';
 import {MyUIRouterConfig} from './routes';
 
 declare var process: any;
+// declare var onSignIn: any;
+
 if (process.env.NODE_ENV === 'production') {
   enableProdMode();
 }

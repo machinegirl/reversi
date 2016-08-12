@@ -1,7 +1,5 @@
 import { Component, OnInit, Input} from '@angular/core';
 
-declare var gapi: any;
-
 @Component({
   selector: 'App',
   template: require('./main.html'),
@@ -16,12 +14,11 @@ export class Main implements OnInit {
 	  console.log('main controller started');
   }
 
-  onSignIn(googleUser) {
-	  let profile = googleUser.getBasicProfile();
-	  console.log('Name: ' + profile.getName);
-  }
-
-  ngOnInit() {
-
-    }
+	ngOnInit() {
+		(<any>window).onSignIn = function(googleUser) {
+			let profile = googleUser.getBasicProfile();
+			console.log('Name: ' + profile.getName());
+			// TODO: send googleUser.getAuthResponse().id_token to backend over websocket
+		  };
+	}
 }

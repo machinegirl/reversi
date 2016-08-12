@@ -6,9 +6,19 @@
     <title>FountainJS</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
-	<meta name="google-signin-client_id" content="402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com">
     <link rel="icon" type="image/png" href="http://fountainjs.io/assets/imgs/fountain.png" />
+
+	<meta name="google-signin-scope" content="profile email">
+	<meta name="google-signin-client_id" content="402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com">
+	<!-- <script>
+	function onSignIn(googleUser) {
+		var profile = googleUser.getBasicProfile();
+		console.log('Name: ' + profile.getName());
+		// TODO: send googleUser.getAuthResponse().id_token to backend over websocket
+	}
+	</script> -->
 	<script src="https://apis.google.com/js/platform.js" async defer></script>
+
   </head>
 
   <body>
