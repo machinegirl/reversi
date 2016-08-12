@@ -9,6 +9,7 @@ extern crate websocket;
 extern crate serde;
 extern crate serde_json;
 // extern crate hyper;
+extern crate curl;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -29,6 +30,9 @@ use std::sync::{Arc, Mutex};
 // use std::io::Read;
 // use hyper::Client;
 // use hyper::header::Connection;
+// use curl::http;
+use curl::easy::Easy;
+use std::io::{stdout, Write};
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -149,9 +153,6 @@ fn main() {
 
 								println!("Connection from {}", ip);
 
-								let message: Message = Message::text("Hello".to_string());
-								client.send_message(&message).unwrap();
-
 								let (mut sender, mut receiver) = client.split();
 
 								for message in receiver.incoming_messages() {
@@ -225,6 +226,26 @@ fn main() {
 																	match serde_json::from_str::<MsgLogin>(&String::from_utf8_lossy(&*message.payload)) {
 																		Ok(msg) => {
 																			println!("logging into backend with id token: {}", msg.id_token);
+
+																			let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
+																			let mut easy = Easy::new();
+																		    easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
+																		    easy.write_function(|data| {
+																		        Ok(stdout().write(data).unwrap())
+																		    }).unwrap();
+																		    easy.perform().unwrap();
+
+																			let res_code = easy.response_code().unwrap();
+																			if res_code != 200 {
+																				let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
+																				sender.send_message(&message).unwrap();
+																				continue;
+																			}
+
+																			let message: Message = Message::text("{\"cmd\": \"login\", \"success\": true}".to_string());
+																			sender.send_message(&message).unwrap();
+
+																			println!("backend login succeeded");
 																		},
 																		Err(e) => {
 																			println!("Error: {:?}", e);

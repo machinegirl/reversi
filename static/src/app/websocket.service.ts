@@ -30,6 +30,30 @@ export class WebsocketService {
 	  		}
 	  	}).bind(this);
 
+		this.sock.onmessage = (function(e) {
+			console.log('websocket server msg:');
+			console.log(e);
+
+			let msg = JSON.parse(e.data);
+
+			switch (msg.cmd) {
+			case 'login':
+
+				if (!msg.success) {
+					console.log('backend login failed');
+					return;
+				}
+
+				console.log('backend login succeeded');
+
+				break;
+
+			default:
+				console.log('websocket server msg not understood');
+			}
+
+	  }).bind(this);
+
 		this.sock.onclose = (function() {
 			console.log('connection to ' + sockAddr + ' closed');
 			window.setTimeout(tryConnecting.bind(this), 5000);
