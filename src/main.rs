@@ -8,7 +8,6 @@ extern crate router;
 extern crate websocket;
 extern crate serde;
 extern crate serde_json;
-// extern crate hyper;
 extern crate curl;
 
 use iron::status;
@@ -27,10 +26,6 @@ use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-// use std::io::Read;
-// use hyper::Client;
-// use hyper::header::Connection;
-// use curl::http;
 use curl::easy::Easy;
 use std::io::{stdout, Write};
 
@@ -237,15 +232,19 @@ fn main() {
 
 																			let res_code = easy.response_code().unwrap();
 																			if res_code != 200 {
+
+																				println!("Error: backend login failed");
+
 																				let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 																				sender.send_message(&message).unwrap();
+
 																				continue;
 																			}
 
+																			println!("backend login succeeded");
+
 																			let message: Message = Message::text("{\"cmd\": \"login\", \"success\": true}".to_string());
 																			sender.send_message(&message).unwrap();
-
-																			println!("backend login succeeded");
 																		},
 																		Err(e) => {
 																			println!("Error: {:?}", e);
