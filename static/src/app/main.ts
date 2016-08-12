@@ -13,40 +13,33 @@ export class Main implements OnInit {
 
   @Input() public main: Main;
 
-  // public websocketService: WebsocketService;
-
   constructor(private websocketService: WebsocketService) {
+	  this.websocketService = websocketService;
 	//   reversiService.gameBoard = gameBoard;
-	this.websocketService = websocketService;
 	  console.log('main controller started');
-
   }
 
 	ngOnInit() {
 		this.websocketService.init();
-		(<any>window).onSignIn = (function(googleUser) {
-			let profile = googleUser.getBasicProfile();
-			console.log('Name: ' + profile.getName());
-			console.log('Token: ' + googleUser.getAuthResponse().id_token);
+        (<any>window).onSignIn = (function(googleUser) {
+    		let profile = googleUser.getBasicProfile();
+            console.log('Name: ' + profile.getName());
 
-			// TODO: send googleUser.getAuthResponse().id_token to backend over websocket
+			let sendMsgIntHandle =  window.setInterval((function() {
+            	if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
+                	this.websocketService.sock.send(JSON.stringify({
+                   		'cmd': 'login',
+                        'id_token': googleUser.getAuthResponse().id_token
+                    }));
 
-			let sendMsgIntHandle = 	window.setInterval((function() {
-				if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
-					this.websocketService.sock.send(JSON.stringify({
-						'cmd': 'login',
-						'id_token': googleUser.getAuthResponse().id_token
-					}));
+               		window.clearInterval(sendMsgIntHandle);
+               } else {
+                   console.log('trying again...')
+               }
+           }).bind(this), 5000);
 
-					window.clearInterval(sendMsgIntHandle);
-				} else {
-					console.log('trying again...')
-				}
-			}).bind(this), 5000);
+       }).bind(this);
 
-		}).bind(this);
-
-
-	}
+    }
 
 }

@@ -12,3 +12,6 @@ websocket = "0.17.1"
 serde = "0.8"
 serde_json = "0.8"
 serde_macros = "0.8"
+
+[dependencies.curl]
+git = "https://github.com/carllerche/curl-rust"
