@@ -9,6 +9,8 @@ extern crate websocket;
 extern crate serde;
 extern crate serde_json;
 extern crate curl;
+extern crate jwt;
+extern crate rustc_serialize;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -28,6 +30,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use curl::easy::Easy;
 use std::io::{stdout, Write};
+use jwt::{Header, Token};
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -78,6 +81,17 @@ struct MsgLogin {
 	id_token: String,
 }
 
+#[derive(RustcDecodable, RustcEncodable)]
+struct GoogleSignInJwt {
+    hd:				String,
+	name: 			String,
+	given_name: 	String,
+	family_name:	String,
+	email:			String,
+	picture:		String,
+	aud:			String,
+}
+
 fn say_hello(req: &mut Request) -> IronResult<Response> {
 	println!("Running say_hello handler, URL path: {}", req.url.path().join("/"));
 	Ok(Response::with((status::Ok, "This request was routed!")))
@@ -85,8 +99,11 @@ fn say_hello(req: &mut Request) -> IronResult<Response> {
 
 fn main() {
 
-	let ip = Ipv4Addr::new(127, 0, 0, 1);
+	let google_api_key = "402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com";
 	let host_port = 8080; //Note: port must be 8080 for GAE
+	let websocket_port = 8055;
+
+	let ip = Ipv4Addr::new(127, 0, 0, 1);
 	let host_addr = Arc::new(Mutex::new(SocketAddrV4::new(ip, host_port)));
 	let host_addr1 = host_addr.clone();
 
@@ -121,13 +138,12 @@ fn main() {
 
 			thread::spawn(move || {
 				let host_addr = host_addr3;
-				let websocket_port = 8055;
 
 				match Server::bind(SocketAddrV4::from_str(&format!("{}:{}", host_addr.ip(), websocket_port)[..]).unwrap()) {
 					Ok(server) => {
 						println!("WebSocket server listening at ws://{}:{}", host_addr.ip(), websocket_port);
 						for connection in server {
-							thread::spawn(|| {
+							thread::spawn(move|| {
 								let request = connection.unwrap().read_request().unwrap(); // Get the request
 								let headers = request.headers.clone(); // Keep the headers so we can check them
 								request.validate().unwrap(); // Validate the request
@@ -232,12 +248,19 @@ fn main() {
 
 																			let res_code = easy.response_code().unwrap();
 																			if res_code != 200 {
-
 																				println!("Error: backend login failed");
-
 																				let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 																				sender.send_message(&message).unwrap();
+																				continue;
+																			}
 
+																			// Check JWT claims
+																			// TODO: do this check for logged_in route also.
+																			let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+																			if token.claims.aud != google_api_key {	// If API credentials are incorrect
+																				println!("Error: backend login failed: Incorrect aud claim");
+																				let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
+																				sender.send_message(&message).unwrap();
 																				continue;
 																			}
 
