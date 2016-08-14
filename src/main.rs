@@ -134,7 +134,15 @@ fn main() {
 							.map_err(|err| err.to_string()))
 						.map(|ip| SocketAddrV4::new(ip, host_port));
 					match addr {
-						Ok(addr) => addr,
+						Ok(addr) => {
+
+							if addr.ip().octets()[0] == 192 {
+								let ip = Ipv4Addr::new(127, 0, 0, 1);
+								SocketAddrV4::new(ip, host_port)
+							} else {
+								addr
+							}
+						},
 						Err(_) => {
 							let ip = Ipv4Addr::new(127, 0, 0, 1);
 							SocketAddrV4::new(ip, host_port)
