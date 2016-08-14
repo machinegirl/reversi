@@ -4,6 +4,7 @@ vm: true
 network:
     forwarded_ports:
     - 8055
+    - 8056
 
 resources:
     cpu: 0.5
@@ -15,3 +16,8 @@ manual_scaling:
 
 beta_settings:
     machine_type: f1-micro
+
+handlers:
+    - url: /.*
+      script: IGNORED
+      secure: always

@@ -15,7 +15,7 @@ export class WebsocketService {
 		  if (address === 'localhost') {
 			  sockAddr = 'ws://127.0.0.1:8055';
 		  } else {
-			  sockAddr = 'ws://104.196.159.79:8055';
+			  sockAddr = 'wss://104.196.159.79:8056';
 		  }
 
 		  console.log('connecting to ' + sockAddr + ' ...');
