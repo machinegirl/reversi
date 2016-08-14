@@ -31,7 +31,7 @@ export class Main implements OnInit {
 
                		window.clearInterval(sendMsgIntHandle);
                } else {
-                   console.log('trying again...')
+                   console.log('trying again...');
                }
            }).bind(this), 5000);
 
