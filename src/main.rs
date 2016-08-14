@@ -78,6 +78,13 @@ struct MsgLogin {
 	id_token: String,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgLoggedIn {
+	cmd: String,
+	id_token: String,
+}
+
+
 fn say_hello(req: &mut Request) -> IronResult<Response> {
 	println!("Running say_hello handler, URL path: {}", req.url.path().join("/"));
 	Ok(Response::with((status::Ok, "This request was routed!")))
@@ -251,6 +258,41 @@ fn main() {
 																		}
 																	}
 																},
+																"logged_in" => {
+																	match serde_json::from_str::<MsgLogin>(&String::from_utf8_lossy(&*message.payload)) {
+																		Ok(msg) => {
+																			println!("checking session with id token: {}", msg.id_token);
+
+																			let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
+																			let mut easy = Easy::new();
+																			easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
+																			easy.write_function(|data| {
+																				Ok(stdout().write(data).unwrap())
+																			}).unwrap();
+																			easy.perform().unwrap();
+
+																			let res_code = easy.response_code().unwrap();
+																			if res_code != 200 {
+
+																				println!("Error: backend login failed");
+
+																				let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
+																				sender.send_message(&message).unwrap();
+
+																				continue;
+																			}
+
+																			println!("backend login succeeded");
+
+																			let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": true}".to_string());
+																			sender.send_message(&message).unwrap();
+																		},
+																		Err(e) => {
+																			println!("Error: {:?}", e);
+																		}
+																	}
+																},
+
 																_ => {
 																	println!("Error: Cmd not understood");
 																}

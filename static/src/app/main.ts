@@ -24,19 +24,20 @@ export class Main implements OnInit {
         (<any>window).onSignIn = (function(googleUser) {
     		let profile = googleUser.getBasicProfile();
             console.log('Name: ' + profile.getName());
-
+			let idToken = googleUser.getAuthResponse().id_token;
+			localStorage.setItem('google_id_token', idToken)
 			let sendMsgIntHandle =  window.setInterval((function() {
             	if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
                 	this.websocketService.sock.send(JSON.stringify({
                    		'cmd': 'login',
-                        'id_token': googleUser.getAuthResponse().id_token
+                        'id_token': idToken
                     }));
 
                		window.clearInterval(sendMsgIntHandle);
                } else {
-                   console.log('trying again...')
+                   console.log('trying again...');
                }
-           }).bind(this), 5000);
+           }).bind(this), 500);
 
        }).bind(this);
 

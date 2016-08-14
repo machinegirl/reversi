@@ -7,6 +7,7 @@ import {bootstrap} from '@angular/platform-browser-dynamic';
 import './index.less';
 import './app/main.less';
 import './app/play.less';
+import './app/dashboard.less';
 
 import {enableProdMode, provide} from '@angular/core';
 import {UIRouterConfig, UIROUTER_PROVIDERS, UiView} from 'ui-router-ng2';

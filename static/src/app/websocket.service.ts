@@ -45,8 +45,21 @@ export class WebsocketService {
 				}
 
 				console.log('backend login succeeded');
+				window.location.assign('/dashboard');
 
 				break;
+
+			case 'logged_in':
+
+				if (!msg.status) {
+					console.log('not logged in');
+					window.location.assign('/');
+					return;
+				}
+
+				console.log('logged in!');
+				break;
+
 
 			default:
 				console.log('websocket server msg not understood');
