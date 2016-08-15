@@ -1,7 +1,9 @@
-import { Component, OnInit, Input} from '@angular/core';
+import { Component, OnInit, Input} 	from '@angular/core';
+import { Http, Response, ConnectionBackend, RequestOptions } 	from '@angular/http';
 import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 import {Player} from './player';
+import { Observable } from 'rxjs/Rx';
 
 
 
@@ -17,7 +19,7 @@ export class Dashboard implements OnInit {
 
 	// public wsStatus;
 
-	constructor(private websocketService: WebsocketService) {
+	constructor(private websocketService: WebsocketService, private http: Http) {
 		this.websocketService = websocketService;
 	}
 
@@ -49,6 +51,15 @@ export class Dashboard implements OnInit {
 		console.log('signing out');
 		(<any>window).gapi.load('client:auth2', this.authInit.bind(this));
 		// localStorage.removeItem('google_id_token');
+		// let resp: any;
+		let idToken = localStorage.getItem('google_id_token');
+		this.http.get('https://accounts.google.com/o/oauth2/revoke?token={' + idToken + '}')
+			.subscribe(
+				data => console.log(data),
+				err => console.log(err),
+				() => console.log('done')
+			);
+		// console.log(resp);
 	}
 
 	authInit() {
