@@ -96,6 +96,12 @@ struct MsgNewGame {
 	id_token: String,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgLogout {
+	cmd: String,
+	id_token: String,
+}
+
 
 #[derive(RustcDecodable, RustcEncodable)]
 struct GoogleSignInJwt {
@@ -429,6 +435,34 @@ fn ws_handler(server: Server) {
 											},
 											"get_ongoing_games" => {
 
+											},
+											"logout" => {
+												match serde_json::from_str::<MsgLogout>(&String::from_utf8_lossy(&*message.payload)) {
+													Ok(msg) => {
+														let ver_url = &format!("https://accounts.google.com/o/oauth2/revoke?token={}", msg.id_token)[..];
+														let mut easy = Easy::new();
+														easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
+														easy.write_function(|data| {
+															Ok(stdout().write(data).unwrap())
+														}).unwrap();
+														easy.perform().unwrap();
+
+														let res_code = easy.response_code().unwrap();
+														if res_code != 200 {
+															println!("Error: backend logout failed");
+															let message: Message = Message::text("{\"cmd\": \"logout\", \"success\": false}".to_string());
+															sender.send_message(&message).unwrap();
+															continue;
+														}
+
+														println!("Error: backend logout succeeded");
+														let message: Message = Message::text("{\"cmd\": \"logout\", \"success\": true}".to_string());
+														sender.send_message(&message).unwrap();
+													},
+													Err(e) => {
+														println!("Error: {:?}", e);
+													}
+												}
 											},
 											_ => {
 												println!("Error: Cmd not understood");
