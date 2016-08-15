@@ -16,25 +16,26 @@ export class WebsocketService {
 	  let sockAddr;
 
 	  let tryConnecting = (function() {
-		  this.wsStatus = 'connecting...';
-		  if (address === 'localhost') {
-			  sockAddr = 'ws://127.0.0.1:8055';
-		  } else {
-			  sockAddr = 'wss://104.196.159.79:8056';
-		  }
 
-		  console.log('connecting to ' + sockAddr + ' ...');
+		this.wsStatus = 'connecting...';
+		if (address !== 'reversi-2016.appspot.com') {
+			sockAddr = 'ws://' + address + ':8055';
+		} else {
+			sockAddr = 'wss://104.196.159.79:8056';
+		}
 
-		  this.sock = new WebSocket(sockAddr, 'rust-websocket');
+		console.log('connecting to ' + sockAddr + ' ...');
 
-		  this.sock.onopen = (function(evt) {
-	  		if (this.sock.readyState === 1) {
-				this.wsStatus = 'connected';
-				console.log('connected to ' + sockAddr);
-	  			this.sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
-				// 		ReversiService.startGame(sock);
-	  		}
-	  	}).bind(this);
+		this.sock = new WebSocket(sockAddr, 'rust-websocket');
+
+		this.sock.onopen = (function(evt) {
+			if (this.sock.readyState === 1) {
+			this.wsStatus = 'connected';
+			console.log('connected to ' + sockAddr);
+				this.sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
+			// 		ReversiService.startGame(sock);
+			}
+		}).bind(this);
 
 		this.sock.onmessage = (function(e) {
 			console.log('websocket server msg:');
