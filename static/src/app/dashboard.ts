@@ -26,6 +26,7 @@ export class Dashboard implements OnInit {
 			let idToken = localStorage.getItem('google_id_token');
 			if (typeof idToken === 'undefined' || idToken === null) {
 				window.location.assign('/');
+				return;
 			}
 			if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
 				this.websocketService.sock.send(JSON.stringify({
@@ -46,6 +47,7 @@ export class Dashboard implements OnInit {
 	signOut() {
 		console.log('signing out');
 		(<any>window).gapi.load('client:auth2', this.authInit.bind(this));
+		localStorage.removeItem('google_id_token');
 	}
 
 	authInit() {
