@@ -51,28 +51,8 @@ export class Dashboard implements OnInit {
 	signOut() {
 		console.log('signing out');
 		(<any>window).gapi.load('client:auth2', this.authInit.bind(this));
-		// localStorage.removeItem('google_id_token');
-		// let resp: any;
-		let sendMsgIntHandle =  window.setInterval((function() {
-			let idToken = localStorage.getItem('google_id_token');
-			if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-				this.websocketService.sock.send(JSON.stringify({
-					'cmd': 'logout',
-					'id_token': idToken
-				}));
-
-				window.clearInterval(sendMsgIntHandle);
-		   } else {
-			   //do nothing
-		   }
-	   }).bind(this), 500);
-
-		// this.http.get('https://accounts.google.com/o/oauth2/revoke?token=' + idToken)
-		// 	.subscribe(
-		// 		data => console.log(data),
-		// 		err => console.log(err),
-		// 		() => console.log('done')
-		// 	);
+		localStorage.removeItem('google_id_token');
+		window.location.assign('/');
 	}
 
 	authInit() {
@@ -85,7 +65,7 @@ export class Dashboard implements OnInit {
 
 	authCallback(googleAuth) {
 		googleAuth.signOut();
-		// window.location.assign('/');
+		window.location.assign('/');
 	}
 
 }
