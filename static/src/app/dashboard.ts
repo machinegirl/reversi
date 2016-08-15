@@ -3,7 +3,7 @@ import { Http, Response, ConnectionBackend, RequestOptions } 	from '@angular/htt
 import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 import {Player} from './player';
-import { Observable } from 'rxjs/Rx';
+// import { Observable } from 'rxjs/Rx';
 
 
 
@@ -21,6 +21,7 @@ export class Dashboard implements OnInit {
 
 	constructor(private websocketService: WebsocketService, private http: Http) {
 		this.websocketService = websocketService;
+		this.http = http;
 	}
 
 	ngOnInit() {
