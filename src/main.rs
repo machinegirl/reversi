@@ -90,6 +90,12 @@ struct MsgLoggedIn {
 	id_token: String,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgNewGame {
+	cmd: String,
+	id_token: String,
+}
+
 
 #[derive(RustcDecodable, RustcEncodable)]
 struct GoogleSignInJwt {
@@ -337,6 +343,92 @@ fn ws_handler(server: Server) {
 														println!("Error: {:?}", e);
 													}
 												}
+											},
+											"logged_in" => {
+												match serde_json::from_str::<MsgLoggedIn>(&String::from_utf8_lossy(&*message.payload)) {
+													Ok(msg) => {
+
+														println!("checking login");
+
+														let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
+														let mut easy = Easy::new();
+														easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
+														easy.write_function(|data| {
+															Ok(stdout().write(data).unwrap())
+														}).unwrap();
+														easy.perform().unwrap();
+
+														let res_code = easy.response_code().unwrap();
+														if res_code != 200 {
+															println!("not logged in");
+															let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
+															sender.send_message(&message).unwrap();
+															continue;
+														}
+
+														// Check JWT claims
+														// TODO: do this check for logged_in route also.
+														let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+														if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
+															println!("Error: backend login check failed: Incorrect aud claim");
+															let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
+															sender.send_message(&message).unwrap();
+															continue;
+														}
+
+														println!("login valid");
+
+														let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": true}".to_string());
+														sender.send_message(&message).unwrap();
+													},
+													Err(e) => {
+														println!("Error: {:?}", e);
+													}
+												}
+											},
+											"new_game" => {
+												match serde_json::from_str::<MsgNewGame>(&String::from_utf8_lossy(&*message.payload)) {
+													Ok(msg) => {
+														// println!("logging into backend with id token: {}", msg.id_token);
+														//
+														// let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
+														// let mut easy = Easy::new();
+														// easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
+														// easy.write_function(|data| {
+														// 	Ok(stdout().write(data).unwrap())
+														// }).unwrap();
+														// easy.perform().unwrap();
+														//
+														// let res_code = easy.response_code().unwrap();
+														// if res_code != 200 {
+														// 	println!("Error: backend login failed");
+														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
+														// 	sender.send_message(&message).unwrap();
+														// 	continue;
+														// }
+														//
+														// // Check JWT claims
+														// // TODO: do this check for logged_in route also.
+														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
+														// 	println!("Error: backend login failed: Incorrect aud claim");
+														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
+														// 	sender.send_message(&message).unwrap();
+														// 	continue;
+														// }
+														//
+														// println!("backend login succeeded");
+														//
+														// let message: Message = Message::text("{\"cmd\": \"login\", \"success\": true}".to_string());
+														// sender.send_message(&message).unwrap();
+													},
+													Err(e) => {
+														println!("Error: {:?}", e);
+													}
+												}
+											},
+											"get_ongoing_games" => {
+
 											},
 											_ => {
 												println!("Error: Cmd not understood");
