@@ -51,8 +51,6 @@ export class Dashboard implements OnInit {
 	signOut() {
 		console.log('signing out');
 		(<any>window).gapi.load('client:auth2', this.authInit.bind(this));
-		localStorage.removeItem('google_id_token');
-		window.location.assign('/');
 	}
 
 	authInit() {
@@ -64,6 +62,7 @@ export class Dashboard implements OnInit {
 	}
 
 	authCallback(googleAuth) {
+		localStorage.removeItem('google_id_token');
 		googleAuth.signOut();
 		window.location.assign('/');
 	}
