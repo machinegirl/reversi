@@ -194,6 +194,8 @@ fn main() {
 		let mut mount = Mount::new();
 		mount
 			.mount("/api", router)
+			.mount("/dashboard", Static::new(Path::new("static/dist/")))
+			.mount("/play", Static::new(Path::new("static/dist/")))
 			.mount("/", Static::new(Path::new("static/dist/")));
 
 		Iron::new(mount).http(host_addr3).unwrap();
