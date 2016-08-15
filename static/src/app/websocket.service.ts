@@ -4,37 +4,38 @@ import {ReversiService} from './reversi.service';
 @Injectable()
 export class WebsocketService {
 
+  public wsStatus: string;
+
   public sock: any;
 
   init() {
+
+	  this.wsStatus = 'not connected';
 
 	  let address = document.location.host.split(':')[0];
 	  let sockAddr;
 
 	  let tryConnecting = (function() {
-		//   if (address === 'localhost' || address === '127.0.0.1') {
-		// 	  sockAddr = 'ws://127.0.0.1:8055';
-		//   } else {
-		// 	  sockAddr = 'wss://104.196.159.79:8056';
-		//   }
 
+		this.wsStatus = 'connecting...';
 		if (address !== 'reversi-2016.appspot.com') {
 			sockAddr = 'ws://' + address + ':8055';
 		} else {
 			sockAddr = 'wss://104.196.159.79:8056';
 		}
 
-		  console.log('connecting to ' + sockAddr + ' ...');
+		console.log('connecting to ' + sockAddr + ' ...');
 
-		  this.sock = new WebSocket(sockAddr, 'rust-websocket');
+		this.sock = new WebSocket(sockAddr, 'rust-websocket');
 
-		  this.sock.onopen = (function(evt) {
-	  		if (this.sock.readyState === 1) {
-				console.log('connected to ' + sockAddr);
-	  			this.sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
-				// 		ReversiService.startGame(sock);
-	  		}
-	  	}).bind(this);
+		this.sock.onopen = (function(evt) {
+			if (this.sock.readyState === 1) {
+			this.wsStatus = 'connected';
+			console.log('connected to ' + sockAddr);
+				this.sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
+			// 		ReversiService.startGame(sock);
+			}
+		}).bind(this);
 
 		this.sock.onmessage = (function(e) {
 			console.log('websocket server msg:');
