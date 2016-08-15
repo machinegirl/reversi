@@ -10,10 +10,11 @@ import {Header} from './header';
   providers: [WebsocketService],
   directives: [Header]
 })
-
 export class Dashboard implements OnInit {
 
 	@Input() public dashboard: Dashboard;
+
+	// public wsStatus;
 
 	constructor(private websocketService: WebsocketService) {
 		this.websocketService = websocketService;
@@ -36,10 +37,22 @@ export class Dashboard implements OnInit {
 
 				window.clearInterval(sendMsgIntHandle);
 		   } else {
-			   console.log('trying again...');
+			   //do nothing
 		   }
 	   }).bind(this), 500);
 
+	//    let observerIntHandle = window.setInterval((function() {
+	// 	   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
+	// 		   (<any>Object).observe(this.websocketService.sock.readyState, (function(changes) {
+	// 			   console.log(changes);
+	// 		   }).bind(this));
+	   //
+	// 		   window.clearInterval(observerIntHandle);
+	// 	   } else {
+	// 		   console.log('websocket not ready, trying again in .5 seconds');
+	// 	   }
+	   //
+	//    }).bind(this), 500);
 
 		console.log('dashboard loaded');
 	}

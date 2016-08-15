@@ -8,6 +8,7 @@ import './index.less';
 import './app/main.less';
 import './app/play.less';
 import './app/dashboard.less';
+import './app/header.less';
 
 import {enableProdMode, provide} from '@angular/core';
 import {UIRouterConfig, UIROUTER_PROVIDERS, UiView} from 'ui-router-ng2';
