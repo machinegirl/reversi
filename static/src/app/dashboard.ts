@@ -45,6 +45,20 @@ export class Dashboard implements OnInit {
 
 	signOut() {
 		console.log('signing out');
+		(<any>window).gapi.load('client:auth2', this.authInit.bind(this));
+	}
+
+	authInit() {
+		(<any>window).gapi.auth2.init({
+			client_id: '402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com',
+			scopes: 'profile'
+		});
+		(<any>window).gapi.auth2.getAuthInstance().then(this.authCallback.bind(this));
+	}
+
+	authCallback(googleAuth) {
+		googleAuth.signOut();
+		window.location.assign('/');
 	}
 
 }
