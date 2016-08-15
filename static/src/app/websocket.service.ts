@@ -12,7 +12,7 @@ export class WebsocketService {
 	  let sockAddr;
 
 	  let tryConnecting = (function() {
-		  if (address === 'localhost') {
+		  if (address === 'localhost' || address === '127.0.0.1') {
 			  sockAddr = 'ws://127.0.0.1:8055';
 		  } else {
 			  sockAddr = 'wss://104.196.159.79:8056';
