@@ -67,6 +67,8 @@ export class WebsocketService {
 				console.log('logged in!');
 				break;
 
+			case 'current_games':
+				break;
 
 			default:
 				console.log('websocket server msg not understood');

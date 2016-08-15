@@ -1,6 +1,7 @@
 import { Component, OnInit, Input} from '@angular/core';
 import {WebsocketService} from './websocket.service';
 import {Header} from './header';
+import {Player} from './player';
 
 
 
@@ -8,7 +9,7 @@ import {Header} from './header';
   selector: 'Dashboard',
   template: require('./dashboard.html'),
   providers: [WebsocketService],
-  directives: [Header]
+  directives: [Header, Player]
 })
 export class Dashboard implements OnInit {
 
@@ -40,19 +41,6 @@ export class Dashboard implements OnInit {
 			   //do nothing
 		   }
 	   }).bind(this), 500);
-
-	//    let observerIntHandle = window.setInterval((function() {
-	// 	   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
-	// 		   (<any>Object).observe(this.websocketService.sock.readyState, (function(changes) {
-	// 			   console.log(changes);
-	// 		   }).bind(this));
-	   //
-	// 		   window.clearInterval(observerIntHandle);
-	// 	   } else {
-	// 		   console.log('websocket not ready, trying again in .5 seconds');
-	// 	   }
-	   //
-	//    }).bind(this), 500);
 
 		console.log('dashboard loaded');
 	}
