@@ -5,11 +5,9 @@ import {ReversiService} from './reversi.service';
 export class WebsocketService {
 
   public wsStatus: string;
-
   public sock: any;
 
   init() {
-
 	  this.wsStatus = 'not connected';
 
 	  let address = document.location.host.split(':')[0];
@@ -30,10 +28,11 @@ export class WebsocketService {
 
 		this.sock.onopen = (function(evt) {
 			if (this.sock.readyState === 1) {
-			this.wsStatus = 'connected';
-			console.log('connected to ' + sockAddr);
+				this.connected = true;
+				this.wsStatus = 'connected';
+				console.log('connected to ' + sockAddr);
 				this.sock.send(JSON.stringify({'cmd': 'msg', 'msg': 'client socket opened'}));
-			// 		ReversiService.startGame(sock);
+				// ReversiService.startGame(sock);
 			}
 		}).bind(this);
 
@@ -52,6 +51,7 @@ export class WebsocketService {
 				}
 
 				console.log('backend login succeeded');
+				this.sock.onclose = undefined;
 				window.location.assign('/dashboard');
 
 				break;

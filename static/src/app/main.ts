@@ -6,7 +6,7 @@ import {Header} from './header';
 @Component({
   selector: 'App',
   template: require('./main.html'),
-  providers: [WebsocketService],
+  providers: [],
   directives: [Header]
 })
 export class Main implements OnInit {
@@ -20,7 +20,6 @@ export class Main implements OnInit {
   }
 
 	ngOnInit() {
-		this.websocketService.init();
         (<any>window).onSignIn = (function(googleUser) {
     		let profile = googleUser.getBasicProfile();
             console.log('Name: ' + profile.getName());

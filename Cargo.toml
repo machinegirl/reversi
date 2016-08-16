@@ -15,6 +15,7 @@ serde_macros = "0.8"
 rustc-serialize = "0.3"
 jwt = "0.4"
 openssl = "0.7"
+inth-oauth2 = "0.10"
 
 [dependencies.curl]
 git = "https://github.com/carllerche/curl-rust"

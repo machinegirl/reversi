@@ -4,7 +4,7 @@ import {WebsocketService} from './websocket.service';
 @Component({
   selector: 'Player',
   template: require('./player.html'),
-  providers: [WebsocketService]
+  providers: []
 })
 export class Player implements OnInit {
 
@@ -13,7 +13,6 @@ export class Player implements OnInit {
 	}
 
 	ngOnInit() {
-		this.websocketService.init();
 
 		let sendMsgIntHandle =  window.setInterval((function() {
 			let idToken = localStorage.getItem('google_id_token');

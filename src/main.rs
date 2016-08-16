@@ -12,6 +12,7 @@ extern crate serde_json;
 extern crate curl;
 extern crate jwt;
 extern crate rustc_serialize;
+extern crate inth_oauth2;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -34,6 +35,12 @@ use std::io::{stdout, Write};
 use jwt::{Header, Token};
 use openssl::ssl::{SslContext, SslMethod};
 use openssl::x509::X509FileType;
+// use inth_oauth2::Client;
+// use inth_oauth2::provider::google::Web;
+// use std::io;
+use std::env;
+use std::fs::File;
+use std::io::Read;
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -106,6 +113,19 @@ struct GoogleSignInJwt {
 	picture:		String,
 	aud:			String,
 	sub:			String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct GoogleDefaultServiceAccountCreds {
+	project_id: 					String,
+	private_key_id:					String,
+	private_key:					String,
+	client_email:					String,
+	client_id:						String,
+	auth_uri:						String,
+	token_uri:						String,
+	auth_provider_x509_cert_url:	String,
+	client_x509_cert_url:			String,
 }
 
 fn say_hello(req: &mut Request) -> IronResult<Response> {
@@ -387,7 +407,65 @@ fn ws_handler(server: Server) {
 											},
 											"new_game" => {
 												match serde_json::from_str::<MsgNewGame>(&String::from_utf8_lossy(&*message.payload)) {
-													Ok(msg) => {
+													Ok(_) => {
+
+														// let key = "GOOGLE_APPLICATION_CREDENTIALS";
+														let key_file = "keys/Reversi-fa2adfa97673.json";
+														let gcloud_key_file = &format!("{}/.config/gcloud/application_default_credentials.json", env::home_dir().unwrap().to_str().unwrap())[..];
+
+														match File::open(key_file) {
+															Ok(mut f) => {
+																let mut s = String::new();
+																f.read_to_string(&mut s).unwrap();
+																println!("Getting app engine creds from {}", key_file);
+																println!("{}", s);
+																new_game(s);
+															},
+															Err(_) => {
+																println!("Getting app engine creds from {}", gcloud_key_file);
+																match File::open(gcloud_key_file) {
+																	Ok(mut f) => {
+																		let mut s = String::new();
+																		f.read_to_string(&mut s).unwrap();
+																		println!("{}", s);
+																		new_game(s);
+																	},
+																	Err(e) => {
+																		println!("Error: Failed getting app engine creds from {}: {}", gcloud_key_file, e);
+																	}
+																}
+															}
+														}
+
+
+
+														// match env::var_os(key) {
+														// 	Some(val) => {
+
+															// },
+															// None => {
+
+														// 	}
+														// }
+
+
+														// let client = Client::<Web>::new(
+													    //     String::from(GOOGLE_API_KEY),
+													    //     String::from(GOOGLE_API_SECRET),
+													    //     Some(String::from("http://localhost:3000")),
+														// );
+														//
+														// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
+													    // println!("{}", auth_uri);
+														//
+													    // let mut code = String::new();
+													    // io::stdin().read_line(&mut code).unwrap();
+														//
+													    // let token = client.request_token(&Default::default(), code.trim()).unwrap();
+														// println!("{:?}", token);
+
+
+
 														// println!("logging into backend with id token: {}", msg.id_token);
 														//
 														// let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
@@ -446,5 +524,16 @@ fn ws_handler(server: Server) {
 				}
 			}
 		});
+	}
+}
+
+fn new_game(creds_str: String) {
+	match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
+		Ok(creds) => {
+			println!("!!! {:?}", creds);
+		},
+		Err(e) => {
+			println!("Error: {:?}", e);
+		}
 	}
 }

@@ -4,7 +4,7 @@ import {WebsocketService} from './websocket.service';
 @Component({
   selector: 'Header',
   template: require('./header.html'),
-  providers: [WebsocketService]
+  providers: []
 })
 export class Header implements OnInit {
 

@@ -10,14 +10,12 @@ import {Player} from './player';
 @Component({
   selector: 'Dashboard',
   template: require('./dashboard.html'),
-  providers: [WebsocketService],
+  providers: [],
   directives: [Header, Player]
 })
 export class Dashboard implements OnInit {
 
 	@Input() public dashboard: Dashboard;
-
-	// public wsStatus;
 
 	constructor(private websocketService: WebsocketService, private http: Http) {
 		this.websocketService = websocketService;
@@ -25,7 +23,6 @@ export class Dashboard implements OnInit {
 	}
 
 	ngOnInit() {
-		this.websocketService.init();
 
 		let sendMsgIntHandle =  window.setInterval((function() {
 			let idToken = localStorage.getItem('google_id_token');

@@ -6,7 +6,7 @@ import {Header} from './header';
 @Component({
   selector: 'Play',
   template: require('./play.html'),
-  providers: [WebsocketService, ReversiService],
+  providers: [ReversiService],
   directives: [Header]
 })
 export class Play implements OnInit {
@@ -19,7 +19,7 @@ export class Play implements OnInit {
   }
 
   ngOnInit() {
-	  this.websocketService.init();
+
 	  this.reversiService.init();
   }
 }
