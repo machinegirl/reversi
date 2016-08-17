@@ -139,13 +139,13 @@ struct GoogleDefaultServiceAccountCreds {
 	client_x509_cert_url:			String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
 struct GoogleAccessTokenRequestHeader {
 	alg:	String,
 	typ:	String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
 struct GoogleAccessTokenRequestBody {
 	iss:	String,
 	scope:	String,
@@ -588,133 +588,133 @@ fn ws_handler(server: Server) {
 }
 
 fn new_game(creds_str: String) -> String {
-	// match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
-	// 	Ok(creds) => {
-	// 		println!("!!! {:?}", creds);
-	//
-	// 		let header = GoogleAccessTokenRequestHeader{
-	// 			typ:	"JWT".to_string(),
-	// 			alg:	"RS256".to_string(),
-	// 		};
-	//
-	// 		let iat = time::get_time().sec;
-	// 		let exp = iat + 60 * 60;
-	//
-	// 		println!("iat # {}", iat);
-	// 		println!("exp # {}", exp);
-	//
-	// 		let body = GoogleAccessTokenRequestBody{
-	// 			iss:	creds.client_email,
-	// 			scope:	"https://www.googleapis.com/auth/userinfo.email".to_string(),
-	// 			aud:	"https://www.googleapis.com/oauth2/v4/token".to_string(),
-	// 			exp:	exp,
-	// 			iat:	iat,
-	// 		};
-	//
-	// 		// let token = Token::new(header, body);
-	//
-	// 		// println!("{:?}", token);
-	//
-	// 		// let token = token.signed(creds.private_key.as_bytes(), Sha256::new()).unwrap();
-	// 		let header = serde_json::to_string(&header).unwrap().to_base64(
-	// 		// 	base64::Config{
-	// 		// 	char_set: base64::CharacterSet::UrlSafe,
-	// 		// 	newline: base64::Newline::LF,
-	// 		// 	pad: true,
-	// 		// 	line_length: None,
-	// 		// }
-	// 		).unwrap().to_string();
-	//
-	// 		let mut buf = "".to_string();
-	//
-	// 		// let header = header.nth();
-	// 		let count = header.char_indices().count();
-	//
-	// 		for (i, v) in header.char_indices() {
-	// 			println!("{} {}", i, v);
-	// 			if i == 0 {
-	// 				continue;
-	// 			}
-	// 			if i >= count-1 {
-	// 				break;
-	// 			}
-	//
-	// 			buf = format!("{}{}", buf, v);
-	// 		}
-	//
-	// 		let body = serde_json::to_string(&body).unwrap();
-	//
-	// 		let token = format!("{}.{}", buf, body);
-	//
-	//
-	// 		println!("@# {}", token);
-	//
-	// 		let req = format!("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion={}", token);
-	//
-	// 		println!("Zass {}", req);
-	//
-	// 		let mut req = req.as_bytes();
-	//
-	// 		let token_url = "https://www.googleapis.com/oauth2/v4/token";
-	// 		let mut easy = Easy::new();
-	// 		easy.url(token_url).unwrap();
-	// 		easy.post(true).unwrap();
-	// 		easy.post_field_size(req.len() as u64).unwrap();
-	//
-	// 		{
-	// 			{
-	// 				easy.write_function(|data| {
-	// 					Ok(stdout().write(data).unwrap())
-	// 				}).unwrap();
-	//
-	// 				// TODO: Example of how to add custom headers, we will need this for Authorization
-	// 				// let mut list = List::new();
-	// 				// list.append("Content-Type: application/json").unwrap();
-	// 				// easy.http_headers(list).unwrap();
-	// 			}
-	// 			{
-	// 				let mut transfer = easy.transfer();
-	// 				transfer.read_function(|buf| {
-	// 					Ok(req.read(buf).unwrap_or(0))
-	// 				}).unwrap();
-	// 				transfer.perform().unwrap();
-	// 			}
-	//
-	//
-	// 		}
-	//
-	// 		{
-	// 			let res_code = easy.response_code().unwrap();
-	// 			if res_code != 200 {
-	// 				println!("Error: backend login failed");
-	// 				return "".to_string();
-	// 			}
-	// 		}
-	//
-	// 		return "azx".to_string();
-	//
-	// 		// let client = Client::<Web>::new(
-	// 		//     String::from(creds.client_id),
-	// 		//     String::from(creds.private_key),
-	// 		//     Some(String::from("urn:ietf:params:oauth:grant-type:jwt-bearer")),
-	// 		// );
-	// 		//
-	// 		// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
-	// 		//
-	// 		// println!("Auth URI: {}", auth_uri);
-	// 		//
-	// 	    // let mut code = String::new();
-	// 	    // io::stdin().read_line(&mut code).unwrap();
-	// 		//
-	// 	    // let http_client = Default::default();
-	// 		//
-	// 	    // let token = client.request_token(&http_client, code.trim()).unwrap();
-	// 	    // println!("Request Token: {:?}", token);
-	// 	},
-	// 	Err(e) => {
-	// 		println!("Error: {:?}", e);
-	// 	}
-	// }
+	match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
+		Ok(creds) => {
+			println!("!!! {:?}", creds);
+
+			let header = GoogleAccessTokenRequestHeader{
+				typ:	"JWT".to_string(),
+				alg:	"RS256".to_string(),
+			};
+
+			let iat = time::get_time().sec;
+			let exp = iat + 60 * 60;
+
+			println!("iat # {}", iat);
+			println!("exp # {}", exp);
+
+			let body = GoogleAccessTokenRequestBody{
+				iss:	creds.client_email,
+				scope:	"https://www.googleapis.com/auth/userinfo.email".to_string(),
+				aud:	"https://www.googleapis.com/oauth2/v4/token".to_string(),
+				exp:	exp,
+				iat:	iat,
+			};
+
+			let token = Token::new(header, body);
+
+			println!("--- {:?}", token);
+
+			let token = token.sign_rsa(creds.private_key.as_bytes()).unwrap();
+			// let header = serde_json::to_string(&header).unwrap().to_base64(
+			// // 	base64::Config{
+			// // 	char_set: base64::CharacterSet::UrlSafe,
+			// // 	newline: base64::Newline::LF,
+			// // 	pad: true,
+			// // 	line_length: None,
+			// // }
+			// ).unwrap().to_string();
+
+			// let mut buf = "".to_string();
+			//
+			// // let header = header.nth();
+			// let count = header.char_indices().count();
+			//
+			// for (i, v) in header.char_indices() {
+			// 	println!("{} {}", i, v);
+			// 	if i == 0 {
+			// 		continue;
+			// 	}
+			// 	if i >= count-1 {
+			// 		break;
+			// 	}
+			//
+			// 	buf = format!("{}{}", buf, v);
+			// }
+			//
+			// let body = serde_json::to_string(&body).unwrap();
+			//
+			// let token = format!("{}.{}", buf, body);
+			//
+			//
+			// println!("@# {}", token);
+
+			let req = format!("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion={}", token);
+
+			println!("Zass {}", req);
+
+			let mut req = req.as_bytes();
+
+			let token_url = "https://www.googleapis.com/oauth2/v4/token";
+			let mut easy = Easy::new();
+			easy.url(token_url).unwrap();
+			easy.post(true).unwrap();
+			easy.post_field_size(req.len() as u64).unwrap();
+
+			{
+				{
+					easy.write_function(|data| {
+						Ok(stdout().write(data).unwrap())
+					}).unwrap();
+
+					// TODO: Example of how to add custom headers, we will need this for Authorization
+					// let mut list = List::new();
+					// list.append("Content-Type: application/json").unwrap();
+					// easy.http_headers(list).unwrap();
+				}
+				{
+					let mut transfer = easy.transfer();
+					transfer.read_function(|buf| {
+						Ok(req.read(buf).unwrap_or(0))
+					}).unwrap();
+					transfer.perform().unwrap();
+				}
+
+
+			}
+
+			{
+				let res_code = easy.response_code().unwrap();
+				if res_code != 200 {
+					println!("Error: backend login failed");
+					return "".to_string();
+				}
+			}
+
+			return "azx".to_string();
+
+			// let client = Client::<Web>::new(
+			//     String::from(creds.client_id),
+			//     String::from(creds.private_key),
+			//     Some(String::from("urn:ietf:params:oauth:grant-type:jwt-bearer")),
+			// );
+			//
+			// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
+			//
+			// println!("Auth URI: {}", auth_uri);
+			//
+		    // let mut code = String::new();
+		    // io::stdin().read_line(&mut code).unwrap();
+			//
+		    // let http_client = Default::default();
+			//
+		    // let token = client.request_token(&http_client, code.trim()).unwrap();
+		    // println!("Request Token: {:?}", token);
+		},
+		Err(e) => {
+			println!("Error: {:?}", e);
+		}
+	}
 
 	return "azx".to_string();
 }
