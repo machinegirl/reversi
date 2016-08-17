@@ -11,8 +11,12 @@ extern crate serde;
 extern crate serde_json;
 extern crate curl;
 extern crate jwt;
+// extern crate frank_jwt;
 extern crate rustc_serialize;
 extern crate inth_oauth2;
+extern crate time;
+extern crate crypto;
+extern crate url;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -24,23 +28,30 @@ use std::net::SocketAddrV4;
 use std::net::Ipv4Addr;
 use std::path::Path;
 use std::str;
-use websocket::{Server, Message, Sender, Receiver};
+use websocket::{Server, Message, Sender, Receiver, WebSocketStream};
 use websocket::message::Type;
 use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use curl::easy::Easy;
+use curl::easy::{Easy, List};
 use std::io::{stdout, Write};
-use jwt::{Header, Token};
+use jwt::{Header, Token, Component};
+// use frank_jwt::{Header, Payload, Algorithm, encode, decode};
 use openssl::ssl::{SslContext, SslMethod};
 use openssl::x509::X509FileType;
-// use inth_oauth2::Client;
-// use inth_oauth2::provider::google::Web;
-// use std::io;
+use inth_oauth2::Client;
+use inth_oauth2::provider::google::Web;
+use std::io;
 use std::env;
 use std::fs::File;
 use std::io::Read;
+// use time::Time;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
+use jwt::header::Algorithm;
+// use url::form_urlencoded;
+use rustc_serialize::base64;
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -126,6 +137,21 @@ struct GoogleDefaultServiceAccountCreds {
 	token_uri:						String,
 	auth_provider_x509_cert_url:	String,
 	client_x509_cert_url:			String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct GoogleAccessTokenRequestHeader {
+	alg:	String,
+	typ:	String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct GoogleAccessTokenRequestBody {
+	iss:	String,
+	scope:	String,
+	aud:	String,
+	exp:	i64,
+	iat:	i64,
 }
 
 fn say_hello(req: &mut Request) -> IronResult<Response> {
@@ -344,14 +370,24 @@ fn ws_handler(server: Server) {
 														}
 
 														// Check JWT claims
-														// TODO: do this check for logged_in route also.
-														let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
-														if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
-															println!("Error: backend login failed: Incorrect aud claim");
+														// TODO: fix, and do this check for logged_in route also.
+
+														if !check_google_id_token_aud_claim(msg.id_token) {
+															// println!("Error: backend login failed: Incorrect aud claim");
 															let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 															sender.send_message(&message).unwrap();
 															continue;
 														}
+
+
+
+														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
+														// 	println!("Error: backend login failed: Incorrect aud claim");
+														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
+														// 	sender.send_message(&message).unwrap();
+														// 	continue;
+														// }
 
 														println!("backend login succeeded");
 
@@ -385,15 +421,23 @@ fn ws_handler(server: Server) {
 															continue;
 														}
 
+
 														// Check JWT claims
-														// TODO: do this check for logged_in route also.
-														let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
-														if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
-															println!("Error: backend login check failed: Incorrect aud claim");
-															let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
+
+														if !check_google_id_token_aud_claim(msg.id_token) {
+															// println!("Error: backend login failed: Incorrect aud claim");
+															let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 															sender.send_message(&message).unwrap();
 															continue;
 														}
+
+														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
+														// 	println!("Error: backend login check failed: Incorrect aud claim");
+														// 	let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
+														// 	sender.send_message(&message).unwrap();
+														// 	continue;
+														// }
 
 														println!("login valid");
 
@@ -419,7 +463,15 @@ fn ws_handler(server: Server) {
 																f.read_to_string(&mut s).unwrap();
 																println!("Getting app engine creds from {}", key_file);
 																println!("{}", s);
-																new_game(s);
+																let game_id = new_game(s);
+																if game_id == "" {
+																	let message: Message = Message::text("{\"cmd\": \"new_game\", \"success\": false}".to_string());
+																	sender.send_message(&message).unwrap();
+																	continue;
+																}
+
+																let message: Message = Message::text(format!("{{\"cmd\": \"new_game\", \"success\": true, \"id\": \"{}\"}}", game_id));
+																sender.send_message(&message).unwrap();
 															},
 															Err(_) => {
 																println!("Getting app engine creds from {}", gcloud_key_file);
@@ -428,7 +480,15 @@ fn ws_handler(server: Server) {
 																		let mut s = String::new();
 																		f.read_to_string(&mut s).unwrap();
 																		println!("{}", s);
-																		new_game(s);
+																		let game_id = new_game(s);
+																		if game_id == "" {
+																			let message: Message = Message::text("{\"cmd\": \"new_game\", \"success\": false}".to_string());
+																			sender.send_message(&message).unwrap();
+																			continue;
+																		}
+
+																		let message: Message = Message::text(format!("{{\"cmd\": \"new_game\", \"success\": true, \"id\": \"{}\"}}", game_id));
+																		sender.send_message(&message).unwrap();
 																	},
 																	Err(e) => {
 																		println!("Error: Failed getting app engine creds from {}: {}", gcloud_key_file, e);
@@ -527,13 +587,147 @@ fn ws_handler(server: Server) {
 	}
 }
 
-fn new_game(creds_str: String) {
-	match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
-		Ok(creds) => {
-			println!("!!! {:?}", creds);
-		},
-		Err(e) => {
-			println!("Error: {:?}", e);
-		}
+fn new_game(creds_str: String) -> String {
+	// match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
+	// 	Ok(creds) => {
+	// 		println!("!!! {:?}", creds);
+	//
+	// 		let header = GoogleAccessTokenRequestHeader{
+	// 			typ:	"JWT".to_string(),
+	// 			alg:	"RS256".to_string(),
+	// 		};
+	//
+	// 		let iat = time::get_time().sec;
+	// 		let exp = iat + 60 * 60;
+	//
+	// 		println!("iat # {}", iat);
+	// 		println!("exp # {}", exp);
+	//
+	// 		let body = GoogleAccessTokenRequestBody{
+	// 			iss:	creds.client_email,
+	// 			scope:	"https://www.googleapis.com/auth/userinfo.email".to_string(),
+	// 			aud:	"https://www.googleapis.com/oauth2/v4/token".to_string(),
+	// 			exp:	exp,
+	// 			iat:	iat,
+	// 		};
+	//
+	// 		// let token = Token::new(header, body);
+	//
+	// 		// println!("{:?}", token);
+	//
+	// 		// let token = token.signed(creds.private_key.as_bytes(), Sha256::new()).unwrap();
+	// 		let header = serde_json::to_string(&header).unwrap().to_base64(
+	// 		// 	base64::Config{
+	// 		// 	char_set: base64::CharacterSet::UrlSafe,
+	// 		// 	newline: base64::Newline::LF,
+	// 		// 	pad: true,
+	// 		// 	line_length: None,
+	// 		// }
+	// 		).unwrap().to_string();
+	//
+	// 		let mut buf = "".to_string();
+	//
+	// 		// let header = header.nth();
+	// 		let count = header.char_indices().count();
+	//
+	// 		for (i, v) in header.char_indices() {
+	// 			println!("{} {}", i, v);
+	// 			if i == 0 {
+	// 				continue;
+	// 			}
+	// 			if i >= count-1 {
+	// 				break;
+	// 			}
+	//
+	// 			buf = format!("{}{}", buf, v);
+	// 		}
+	//
+	// 		let body = serde_json::to_string(&body).unwrap();
+	//
+	// 		let token = format!("{}.{}", buf, body);
+	//
+	//
+	// 		println!("@# {}", token);
+	//
+	// 		let req = format!("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion={}", token);
+	//
+	// 		println!("Zass {}", req);
+	//
+	// 		let mut req = req.as_bytes();
+	//
+	// 		let token_url = "https://www.googleapis.com/oauth2/v4/token";
+	// 		let mut easy = Easy::new();
+	// 		easy.url(token_url).unwrap();
+	// 		easy.post(true).unwrap();
+	// 		easy.post_field_size(req.len() as u64).unwrap();
+	//
+	// 		{
+	// 			{
+	// 				easy.write_function(|data| {
+	// 					Ok(stdout().write(data).unwrap())
+	// 				}).unwrap();
+	//
+	// 				// TODO: Example of how to add custom headers, we will need this for Authorization
+	// 				// let mut list = List::new();
+	// 				// list.append("Content-Type: application/json").unwrap();
+	// 				// easy.http_headers(list).unwrap();
+	// 			}
+	// 			{
+	// 				let mut transfer = easy.transfer();
+	// 				transfer.read_function(|buf| {
+	// 					Ok(req.read(buf).unwrap_or(0))
+	// 				}).unwrap();
+	// 				transfer.perform().unwrap();
+	// 			}
+	//
+	//
+	// 		}
+	//
+	// 		{
+	// 			let res_code = easy.response_code().unwrap();
+	// 			if res_code != 200 {
+	// 				println!("Error: backend login failed");
+	// 				return "".to_string();
+	// 			}
+	// 		}
+	//
+	// 		return "azx".to_string();
+	//
+	// 		// let client = Client::<Web>::new(
+	// 		//     String::from(creds.client_id),
+	// 		//     String::from(creds.private_key),
+	// 		//     Some(String::from("urn:ietf:params:oauth:grant-type:jwt-bearer")),
+	// 		// );
+	// 		//
+	// 		// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
+	// 		//
+	// 		// println!("Auth URI: {}", auth_uri);
+	// 		//
+	// 	    // let mut code = String::new();
+	// 	    // io::stdin().read_line(&mut code).unwrap();
+	// 		//
+	// 	    // let http_client = Default::default();
+	// 		//
+	// 	    // let token = client.request_token(&http_client, code.trim()).unwrap();
+	// 	    // println!("Request Token: {:?}", token);
+	// 	},
+	// 	Err(e) => {
+	// 		println!("Error: {:?}", e);
+	// 	}
+	// }
+
+	return "azx".to_string();
+}
+
+fn check_google_id_token_aud_claim(id_token: String) -> bool {
+	// println!("!! id_token: {:?}", id_token);
+
+	let token = Token::<Header, GoogleSignInJwt>::parse(&id_token).unwrap();
+	if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
+		println!("Error: backend login failed: Incorrect aud claim");
+		return false;
 	}
+
+	// println!("!!! id_token: {:?}", token);
+	return true;
 }
