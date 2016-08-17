@@ -67,6 +67,10 @@ export class WebsocketService {
 				console.log('logged in!');
 				break;
 
+			case 'new_game':
+				window.location.assign('/play');
+				break;
+
 			// case 'current_games':
 			// 	break;
 

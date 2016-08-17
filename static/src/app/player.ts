@@ -8,12 +8,14 @@ import {WebsocketService} from './websocket.service';
 })
 export class Player implements OnInit {
 
+	public path: string;
+
 	constructor(private websocketService: WebsocketService) {
 		this.websocketService = websocketService;
 	}
 
 	ngOnInit() {
-
+		this.path = window.location.pathname;
 		let sendMsgIntHandle =  window.setInterval((function() {
 			let idToken = localStorage.getItem('google_id_token');
 			if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
