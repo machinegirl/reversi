@@ -1,5 +1,9 @@
 <Header></Header>
-
-<div>
-	<canvas id="gameBoard" width="600" height="400"></canvas>
+<div class="flexbox" style="flex-direction: row;">
+	<div class="gameboard">
+		<canvas id="gameBoard" width="400" height="400" (click)="move($event)"></canvas>
+	</div>
+	<div class="player">
+		<Player></Player>
+	</div>
 </div>

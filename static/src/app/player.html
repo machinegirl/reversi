@@ -2,5 +2,8 @@
 	<div class="player_info">
 		player info goes here
 	</div>
-	<button id="new_game" (click)="newGame()">New Game</button>
+	<div class="score" *ngIf="path === '/play'">
+		score goes here
+	</div>
+	<button id="new_game" *ngIf="path === '/dashboard'" (click)="newGame()">New Game</button>
 </player>
