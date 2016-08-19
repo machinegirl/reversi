@@ -7,7 +7,7 @@ import {Player} from './player'
 @Component({
   selector: 'Play',
   template: require('./play.html'),
-  providers: [ReversiService],
+  providers: [],
   directives: [Header, Player]
 })
 export class Play implements OnInit {
@@ -25,7 +25,6 @@ export class Play implements OnInit {
 	  id = id.substring(4, idLength);
 	  let intHandle = window.setInterval((function() {
 		  if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-			  this.reversiService.init(this.websocketService.sock);
 			  this.reversiService.loadGame(id);
 
 			  window.clearInterval(intHandle);

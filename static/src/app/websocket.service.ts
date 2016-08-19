@@ -6,8 +6,15 @@ export class WebsocketService {
 
   public wsStatus: string;
   public sock: any;
+  public reversiService: any;
+
+	constructor(reversiService: ReversiService) {
+		this.reversiService = reversiService;
+	}
 
   init() {
+	//   this.reversiService = ReversiService;
+	  this.reversiService.init();
 	  this.wsStatus = 'not connected';
 
 	  let address = document.location.host.split(':')[0];
@@ -25,6 +32,7 @@ export class WebsocketService {
 		console.log('connecting to ' + sockAddr + ' ...');
 
 		this.sock = new WebSocket(sockAddr, 'rust-websocket');
+		this.reversiService.sockHandle = this.sock;
 
 		this.sock.onopen = (function(evt) {
 			if (this.sock.readyState === 1) {
@@ -72,6 +80,9 @@ export class WebsocketService {
 				break;
 
 			case 'load_game':
+				// console.log(msg.game.board);
+				this.reversiService.game = msg.game;
+				this.reversiService.drawGameBoard(msg.game.board);
 				break;
 
 			// case 'current_games':

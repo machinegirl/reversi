@@ -3,28 +3,31 @@ import { Injectable} from '@angular/core';
 @Injectable()
 export class ReversiService {
 
-	public gameBoard: Array<Array<any>>;
+	public gameBoard: Array<Array<number>>;
 	public sockHandle: any;
+	public game: any;
 
-	init(sockHandle) {
-		this.sockHandle = sockHandle;
+	init() {
 		console.log('reversi service started');
+
+		this.gameBoard = [
+			[1, 0, 0, 0, 0, 0, 0, 0],
+			[0, 1, 0, 0, 0, 2, 0, 0],
+			[0, 0, 2, 0, 0, 0, 1, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 1, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 2, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 1, 0, 0, 0]
+		];
+
 		let c = <HTMLCanvasElement> document.getElementById('gameBoard');
 		if (typeof c !== 'undefined') {
 			let ctx = <CanvasRenderingContext2D> c.getContext('2d');
 			// console.log(ctx);
 			ctx.fillStyle = '#0f8f2f';
 			ctx.fillRect(0, 0, 400, 400);
-			// let gameBoard = [
-			// 	[1, 0, 0, 0, 0, 0, 0, 0],
-			// 	[0, 1, 0, 0, 0, 2, 0, 0],
-			// 	[0, 0, 2, 0, 0, 0, 1, 0],
-			// 	[0, 0, 0, 0, 0, 0, 0, 0],
-			// 	[0, 1, 0, 0, 0, 0, 0, 0],
-			// 	[0, 0, 0, 0, 0, 0, 2, 0],
-			// 	[0, 0, 0, 0, 0, 0, 0, 0],
-			// 	[0, 0, 0, 0, 1, 0, 0, 0]
-			// ];
+
 			// this.drawGameBoard(gameBoard);
 		} else {
 			// console.log('c: ' + c);
