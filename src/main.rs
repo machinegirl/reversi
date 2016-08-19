@@ -113,7 +113,7 @@ struct MsgNewGame {
 struct MsgLoadGame {
 	cmd: String,
 	id: String,
-	id_token: GoogleSignInJwt,
+	id_token: String,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -461,6 +461,8 @@ fn ws_handler(server: Server) {
 															continue;
 														}
 
+														let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
+
 														// Test game
 														if &msg.id[..] == "azx" {
 															let mut board = [[0u8; 8]; 8];
@@ -475,7 +477,7 @@ fn ws_handler(server: Server) {
 																game: GameWire{
 																	id:	"azx".to_string(),
 																	board: board,
-																	players: [msg.id_token.sub.clone(), msg.id_token.sub.clone()],
+																	players: [token.claims.sub.clone(), token.claims.sub.clone()],
 																	next_turn: 0,
 																},
 															};
