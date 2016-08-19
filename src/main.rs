@@ -65,6 +65,7 @@ struct GameWire {
 	board: 		[[u8; 8]; 8],
 	players: 	[String; 2],
 	next_turn: 	u8,
+	pieces:		[u8; 2],
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -465,12 +466,9 @@ fn ws_handler(server: Server) {
 
 														// Test game
 														if &msg.id[..] == "azx" {
-															let mut board = [[0u8; 8]; 8];
-															board[3][3] = 1;
-															board[3][4] = 2;
-															board[4][3] = 2;
-															board[4][4] = 1;
 
+															let mut board = [[0u8; 8]; 8];
+															
 															let game_wire = MsgLoadGameRes{
 																cmd: "load_game".to_string(),
 																success: true,
@@ -479,6 +477,7 @@ fn ws_handler(server: Server) {
 																	board: board,
 																	players: [token.claims.sub.clone(), token.claims.sub.clone()],
 																	next_turn: 0,
+																	pieces: [32u8, 32u8],
 																},
 															};
 
