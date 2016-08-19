@@ -12,6 +12,7 @@ import {Player} from './player';
 })
 export class Play implements OnInit {
 
+
   constructor(private websocketService: WebsocketService, private reversiService: ReversiService) {
 	  this.websocketService = websocketService;
 	  this.reversiService = reversiService;
@@ -44,7 +45,7 @@ export class Play implements OnInit {
 		  console.log('invalid move');
 		  return;
 	  }
-
+	  // support for opening moves
 
   }
 }

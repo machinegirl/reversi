@@ -6,6 +6,9 @@ export class ReversiService {
 	// public gameBoard: Array<Array<number>>;
 	public sockHandle: any;
 	public game: any;
+	public numPieces0: number;
+	public numPieces1: number;
+
 
 	init() {
 		console.log('reversi service started');
@@ -60,9 +63,9 @@ export class ReversiService {
 					ctx.arc(startX + (tileH / 2), startY + (tileH / 2), tileH / 2.2, 0, 2 * Math.PI);
 
 					if (gameBoard[i][j] === 1) {
-						ctx.fillStyle = '#000000';
-					} else {
 						ctx.fillStyle = '#FFFFFF';
+					} else {
+						ctx.fillStyle = '#000000';
 					}
 					ctx.fill();
 				}
@@ -95,6 +98,18 @@ export class ReversiService {
 			'id_token': idToken,
 			'id': id
 		}));
+
+	}
+
+	setupGame(game) {
+		this.game = game;
+		// let idToken = localStorage.getItem('google_id_token');
+		this.numPieces0 = this.game.pieces[0];
+		this.numPieces1 = this.game.pieces[1];
+
+		console.log('player0 pieces left: ' + this.numPieces0);
+		console.log('player1 pieces left: ' + this.numPieces1);
+		this.drawGameBoard(this.game.board);
 
 	}
 

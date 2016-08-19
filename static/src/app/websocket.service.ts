@@ -80,10 +80,7 @@ export class WebsocketService {
 				break;
 
 			case 'load_game':
-				// console.log(msg.game.board);
-				this.reversiService.game = msg.game;
-				// this.reversiService.gameBoard = msg.game.board;
-				this.reversiService.drawGameBoard(this.reversiService.game.board);
+				this.reversiService.setupGame(msg.game);
 				break;
 
 			// case 'current_games':
