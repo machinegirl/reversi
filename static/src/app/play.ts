@@ -36,16 +36,25 @@ export class Play implements OnInit {
 
   move(e) {
 	//   console.log(e);
-	  let gameBoardLength: number = this.reversiService.game.board.length;
-	  let tileW = e.srcElement.clientWidth / gameBoardLength;
-	  let clickedRow = Math.floor(e.offsetY / tileW);
-	  let clickedColumn = Math.floor(e.offsetX / tileW);
-	  let clickedTile = this.reversiService.game.board[clickedRow][clickedColumn];
-	  if (clickedTile !== 0) {
-		  console.log('invalid move');
-		  return;
-	  }
-	  // support for opening moves
+	let gameBoardLength: number = this.reversiService.game.board.length;
+	let tileW = e.srcElement.clientWidth / gameBoardLength;
+	let clickedRow = Math.floor(e.offsetY / tileW);
+	let clickedColumn = Math.floor(e.offsetX / tileW);
+	let clickedTile = this.reversiService.game.board[clickedRow][clickedColumn];
+	if (clickedTile !== 0) {
+	  console.log('invalid move');
+	  return;
+	}
+	// check if it's your turn
+	let idToken = localStorage.getItem('google_id_token');
+	let playerTurn = this.reversiService.game.player_turn;
+	if (this.reversiService.game.players[playerTurn] !== idToken) {
+	  console.log('not your turn');
+	  return;
+	}
+
+	// support for opening moves
+
 
   }
 }

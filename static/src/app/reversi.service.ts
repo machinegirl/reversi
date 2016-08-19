@@ -103,12 +103,6 @@ export class ReversiService {
 
 	setupGame(game) {
 		this.game = game;
-		// let idToken = localStorage.getItem('google_id_token');
-		this.numPieces0 = this.game.pieces[0];
-		this.numPieces1 = this.game.pieces[1];
-
-		console.log('player0 pieces left: ' + this.numPieces0);
-		console.log('player1 pieces left: ' + this.numPieces1);
 		this.drawGameBoard(this.game.board);
 
 	}
