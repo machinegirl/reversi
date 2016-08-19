@@ -34,12 +34,17 @@ export class Play implements OnInit {
   }
 
   move(e) {
-	  console.log(e);
-	  let gameBoardLength: number = this.reversiService.gameBoard.length;
+	//   console.log(e);
+	  let gameBoardLength: number = this.reversiService.game.board.length;
 	  let tileW = e.srcElement.clientWidth / gameBoardLength;
 	  let clickedRow = Math.floor(e.offsetY / tileW);
-	  console.log(clickedRow);
-	  let clickedTile = Math.floor(e.offsetX / tileW);
-	  console.log(clickedTile);
+	  let clickedColumn = Math.floor(e.offsetX / tileW);
+	  let clickedTile = this.reversiService.game.board[clickedRow][clickedColumn];
+	  if (clickedTile !== 0) {
+		  console.log('invalid move');
+		  return;
+	  }
+
+
   }
 }
