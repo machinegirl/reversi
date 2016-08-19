@@ -13,20 +13,11 @@ serde = "0.8"
 serde_json = "0.8"
 serde_macros = "0.8"
 rustc-serialize = "0.3"
-# jwt = "0.4"
 openssl = "0.7.1"
-inth-oauth2 = "0.10"
 time = "0.1"
-rust-crypto = "^0.2"
 
 [dependencies.curl]
 git = "https://github.com/carllerche/curl-rust"
-
-[dependencies.url]
-git = "https://github.com/servo/rust-url"
-
-[dependencies.rand]
-git = "https://github.com/rust-lang-nursery/rand.git"
 
 [dependencies.jwt]
 git = "https://github.com/defcronyke/rust-jwt.git"

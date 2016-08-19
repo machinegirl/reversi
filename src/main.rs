@@ -11,12 +11,8 @@ extern crate serde;
 extern crate serde_json;
 extern crate curl;
 extern crate jwt;
-// extern crate frank_jwt;
 extern crate rustc_serialize;
-extern crate inth_oauth2;
 extern crate time;
-extern crate crypto;
-extern crate url;
 
 use iron::status;
 use iron::{Iron, Request, Response, IronResult};
@@ -28,30 +24,21 @@ use std::net::SocketAddrV4;
 use std::net::Ipv4Addr;
 use std::path::Path;
 use std::str;
-use websocket::{Server, Message, Sender, Receiver, WebSocketStream};
+use websocket::{Server, Message, Sender, Receiver};
 use websocket::message::Type;
 use websocket::header::WebSocketProtocol;
 use std::thread;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use curl::easy::{Easy, List};
+use curl::easy::{Easy};
 use std::io::{stdout, Write};
-use jwt::{Header, Token, Component};
-// use frank_jwt::{Header, Payload, Algorithm, encode, decode};
+use jwt::{Header, Token};
 use openssl::ssl::{SslContext, SslMethod};
 use openssl::x509::X509FileType;
-use inth_oauth2::Client;
-use inth_oauth2::provider::google::Web;
-use std::io;
 use std::env;
 use std::fs::File;
 use std::io::Read;
-// use time::Time;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
-use jwt::header::Algorithm;
-// use url::form_urlencoded;
-use rustc_serialize::base64;
+// use serde_json::ser::to_string;
 
 #[derive(Debug)]
 struct Game<'a> {
@@ -70,6 +57,14 @@ impl<'a> Game<'a> {
 		};
 		return gb;
 	}
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
+struct GameWire {
+	id: 		String,
+	board: 		[[u8; 8]; 8],
+	players: 	[String; 2],
+	next_turn: 	u8,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -112,6 +107,19 @@ struct MsgLoggedIn {
 struct MsgNewGame {
 	cmd: String,
 	id_token: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgLoadGame {
+	cmd: String,
+	id: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgLoadGameRes {
+	cmd: String,
+	success: bool,
+	game: GameWire,
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -303,42 +311,7 @@ fn ws_handler(server: Server) {
 								match msg.cmd {
 									Some(cmd) => {
 										match &cmd[..] {
-											"start_game" => {
-
-												// unmarshal to more specific data Type
-
-												match serde_json::from_str::<MsgStartGame>(&String::from_utf8_lossy(&*message.payload)) {
-													Ok(msg) => {
-														match msg.id {
-															Some(id) => {
-																// Load existing game by id
-																if id == "" {
-																	// Start new game
-																	println!("!!! starting new game !!!");
-																	let game = Game::new();
-																	println!("game: {:?}", game);
-
-																} else {
-																	println!("!!! loading game {} !!!", id);
-																}
-															},
-															None => {
-																// Start new game
-																println!("!!! starting new game !!!");
-																let game = Game::new();
-																println!("game: {:?}", game);
-															}
-														}
-													},
-													Err(e) => {
-														println!("Error: {:?}", e);
-													}
-												}
-
-
-											},
 											"msg" => {
-
 												match serde_json::from_str::<MsgMsg>(&String::from_utf8_lossy(&*message.payload)) {
 													Ok(msg) => {
 														println!("msg from websocket client: {}", msg.msg);
@@ -370,27 +343,13 @@ fn ws_handler(server: Server) {
 														}
 
 														// Check JWT claims
-														// TODO: fix, and do this check for logged_in route also.
-
 														if !check_google_id_token_aud_claim(msg.id_token) {
-															// println!("Error: backend login failed: Incorrect aud claim");
 															let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 															sender.send_message(&message).unwrap();
 															continue;
 														}
 
-
-
-														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
-														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
-														// 	println!("Error: backend login failed: Incorrect aud claim");
-														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
-														// 	sender.send_message(&message).unwrap();
-														// 	continue;
-														// }
-
 														println!("backend login succeeded");
-
 														let message: Message = Message::text("{\"cmd\": \"login\", \"success\": true}".to_string());
 														sender.send_message(&message).unwrap();
 													},
@@ -421,23 +380,13 @@ fn ws_handler(server: Server) {
 															continue;
 														}
 
-
 														// Check JWT claims
-
 														if !check_google_id_token_aud_claim(msg.id_token) {
 															// println!("Error: backend login failed: Incorrect aud claim");
 															let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
 															sender.send_message(&message).unwrap();
 															continue;
 														}
-
-														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
-														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
-														// 	println!("Error: backend login check failed: Incorrect aud claim");
-														// 	let message: Message = Message::text("{\"cmd\": \"logged_in\", \"status\": false}".to_string());
-														// 	sender.send_message(&message).unwrap();
-														// 	continue;
-														// }
 
 														println!("login valid");
 
@@ -452,8 +401,6 @@ fn ws_handler(server: Server) {
 											"new_game" => {
 												match serde_json::from_str::<MsgNewGame>(&String::from_utf8_lossy(&*message.payload)) {
 													Ok(_) => {
-
-														// let key = "GOOGLE_APPLICATION_CREDENTIALS";
 														let key_file = "keys/Reversi-fa2adfa97673.json";
 														let gcloud_key_file = &format!("{}/.config/gcloud/application_default_credentials.json", env::home_dir().unwrap().to_str().unwrap())[..];
 
@@ -462,7 +409,6 @@ fn ws_handler(server: Server) {
 																let mut s = String::new();
 																f.read_to_string(&mut s).unwrap();
 																println!("Getting app engine creds from {}", key_file);
-																println!("{}", s);
 																let game_id = new_game(s);
 																if game_id == "" {
 																	let message: Message = Message::text("{\"cmd\": \"new_game\", \"success\": false}".to_string());
@@ -479,7 +425,6 @@ fn ws_handler(server: Server) {
 																	Ok(mut f) => {
 																		let mut s = String::new();
 																		f.read_to_string(&mut s).unwrap();
-																		println!("{}", s);
 																		let game_id = new_game(s);
 																		if game_id == "" {
 																			let message: Message = Message::text("{\"cmd\": \"new_game\", \"success\": false}".to_string());
@@ -496,68 +441,6 @@ fn ws_handler(server: Server) {
 																}
 															}
 														}
-
-
-
-														// match env::var_os(key) {
-														// 	Some(val) => {
-
-															// },
-															// None => {
-
-														// 	}
-														// }
-
-
-														// let client = Client::<Web>::new(
-													    //     String::from(GOOGLE_API_KEY),
-													    //     String::from(GOOGLE_API_SECRET),
-													    //     Some(String::from("http://localhost:3000")),
-														// );
-														//
-														// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
-													    // println!("{}", auth_uri);
-														//
-													    // let mut code = String::new();
-													    // io::stdin().read_line(&mut code).unwrap();
-														//
-													    // let token = client.request_token(&Default::default(), code.trim()).unwrap();
-														// println!("{:?}", token);
-
-
-
-														// println!("logging into backend with id token: {}", msg.id_token);
-														//
-														// let ver_url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=";
-														// let mut easy = Easy::new();
-														// easy.url(&format!("{}{}", ver_url, msg.id_token)[..]).unwrap();
-														// easy.write_function(|data| {
-														// 	Ok(stdout().write(data).unwrap())
-														// }).unwrap();
-														// easy.perform().unwrap();
-														//
-														// let res_code = easy.response_code().unwrap();
-														// if res_code != 200 {
-														// 	println!("Error: backend login failed");
-														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
-														// 	sender.send_message(&message).unwrap();
-														// 	continue;
-														// }
-														//
-														// // Check JWT claims
-														// // TODO: do this check for logged_in route also.
-														// let token = Token::<Header, GoogleSignInJwt>::parse(&msg.id_token).unwrap();
-														// if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
-														// 	println!("Error: backend login failed: Incorrect aud claim");
-														// 	let message: Message = Message::text("{\"cmd\": \"login\", \"success\": false}".to_string());
-														// 	sender.send_message(&message).unwrap();
-														// 	continue;
-														// }
-														//
-														// println!("backend login succeeded");
-														//
-														// let message: Message = Message::text("{\"cmd\": \"login\", \"success\": true}".to_string());
-														// sender.send_message(&message).unwrap();
 													},
 													Err(e) => {
 														println!("Error: {:?}", e);
@@ -566,6 +449,39 @@ fn ws_handler(server: Server) {
 											},
 											"get_ongoing_games" => {
 
+											},
+											"load_game" => {
+												match serde_json::from_str::<MsgLoadGame>(&String::from_utf8_lossy(&*message.payload)) {
+													Ok(msg) => {
+														if msg.id == "" {
+															println!("Error: Game ID not set");
+															let message: Message = Message::text(format!("{{\"cmd\": \"load_game\", \"success\": false, \"error\": \"You didn't send a game ID\"}}"));
+															sender.send_message(&message).unwrap();
+															continue;
+														}
+
+														let game_wire = MsgLoadGameRes{
+															cmd: "load_game".to_string(),
+															success: true,
+															game: GameWire{
+																id:	"azx".to_string(),
+																board: [[0u8; 8]; 8],
+																players: ["ab1".to_string(), "ab2".to_string()],
+																next_turn: 0,
+															},
+														};
+
+														let game_wire_str = serde_json::to_string(&game_wire).unwrap();
+
+														if &msg.id[..] == "azx" {	// Test game
+															let message: Message = Message::text(game_wire_str);
+															sender.send_message(&message).unwrap();
+														}
+													},
+													Err(e) => {
+														println!("Error: {:?}", e);
+													}
+												}
 											},
 											_ => {
 												println!("Error: Cmd not understood");
@@ -583,6 +499,7 @@ fn ws_handler(server: Server) {
 					}
 				}
 			}
+
 		});
 	}
 }
@@ -590,7 +507,6 @@ fn ws_handler(server: Server) {
 fn new_game(creds_str: String) -> String {
 	match serde_json::from_str::<GoogleDefaultServiceAccountCreds>(&creds_str) {
 		Ok(creds) => {
-			println!("!!! {:?}", creds);
 
 			let header = GoogleAccessTokenRequestHeader{
 				typ:	"JWT".to_string(),
@@ -599,9 +515,6 @@ fn new_game(creds_str: String) -> String {
 
 			let iat = time::get_time().sec;
 			let exp = iat + 60 * 60;
-
-			println!("iat # {}", iat);
-			println!("exp # {}", exp);
 
 			let body = GoogleAccessTokenRequestBody{
 				iss:	creds.client_email,
@@ -612,49 +525,9 @@ fn new_game(creds_str: String) -> String {
 			};
 
 			let token = Token::new(header, body);
-
-			println!("--- {:?}", token);
-
 			let token = token.sign_rsa(creds.private_key.as_bytes()).unwrap();
-			// let header = serde_json::to_string(&header).unwrap().to_base64(
-			// // 	base64::Config{
-			// // 	char_set: base64::CharacterSet::UrlSafe,
-			// // 	newline: base64::Newline::LF,
-			// // 	pad: true,
-			// // 	line_length: None,
-			// // }
-			// ).unwrap().to_string();
-
-			// let mut buf = "".to_string();
-			//
-			// // let header = header.nth();
-			// let count = header.char_indices().count();
-			//
-			// for (i, v) in header.char_indices() {
-			// 	println!("{} {}", i, v);
-			// 	if i == 0 {
-			// 		continue;
-			// 	}
-			// 	if i >= count-1 {
-			// 		break;
-			// 	}
-			//
-			// 	buf = format!("{}{}", buf, v);
-			// }
-			//
-			// let body = serde_json::to_string(&body).unwrap();
-			//
-			// let token = format!("{}.{}", buf, body);
-			//
-			//
-			// println!("@# {}", token);
-
 			let req = format!("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion={}", token);
-
-			println!("Zass {}", req);
-
 			let mut req = req.as_bytes();
-
 			let token_url = "https://www.googleapis.com/oauth2/v4/token";
 			let mut easy = Easy::new();
 			easy.url(token_url).unwrap();
@@ -666,11 +539,6 @@ fn new_game(creds_str: String) -> String {
 					easy.write_function(|data| {
 						Ok(stdout().write(data).unwrap())
 					}).unwrap();
-
-					// TODO: Example of how to add custom headers, we will need this for Authorization
-					// let mut list = List::new();
-					// list.append("Content-Type: application/json").unwrap();
-					// easy.http_headers(list).unwrap();
 				}
 				{
 					let mut transfer = easy.transfer();
@@ -679,10 +547,7 @@ fn new_game(creds_str: String) -> String {
 					}).unwrap();
 					transfer.perform().unwrap();
 				}
-
-
 			}
-
 			{
 				let res_code = easy.response_code().unwrap();
 				if res_code != 200 {
@@ -692,24 +557,6 @@ fn new_game(creds_str: String) -> String {
 			}
 
 			return "azx".to_string();
-
-			// let client = Client::<Web>::new(
-			//     String::from(creds.client_id),
-			//     String::from(creds.private_key),
-			//     Some(String::from("urn:ietf:params:oauth:grant-type:jwt-bearer")),
-			// );
-			//
-			// let auth_uri = client.auth_uri(Some("https://www.googleapis.com/auth/userinfo.email"), None).unwrap();
-			//
-			// println!("Auth URI: {}", auth_uri);
-			//
-		    // let mut code = String::new();
-		    // io::stdin().read_line(&mut code).unwrap();
-			//
-		    // let http_client = Default::default();
-			//
-		    // let token = client.request_token(&http_client, code.trim()).unwrap();
-		    // println!("Request Token: {:?}", token);
 		},
 		Err(e) => {
 			println!("Error: {:?}", e);
@@ -720,14 +567,10 @@ fn new_game(creds_str: String) -> String {
 }
 
 fn check_google_id_token_aud_claim(id_token: String) -> bool {
-	// println!("!! id_token: {:?}", id_token);
-
 	let token = Token::<Header, GoogleSignInJwt>::parse(&id_token).unwrap();
 	if token.claims.aud != GOOGLE_API_KEY {	// If API credentials are incorrect
 		println!("Error: backend login failed: Incorrect aud claim");
 		return false;
 	}
-
-	// println!("!!! id_token: {:?}", token);
 	return true;
 }
