@@ -460,20 +460,26 @@ fn ws_handler(server: Server) {
 															continue;
 														}
 
-														let game_wire = MsgLoadGameRes{
-															cmd: "load_game".to_string(),
-															success: true,
-															game: GameWire{
-																id:	"azx".to_string(),
-																board: [[0u8; 8]; 8],
-																players: ["ab1".to_string(), "ab2".to_string()],
-																next_turn: 0,
-															},
-														};
+														// Test game
+														if &msg.id[..] == "azx" {
+															let mut board = [[0u8; 8]; 8];
+															board[3][3] = 1;
+															board[3][4] = 2;
+															board[4][3] = 2;
+															board[4][4] = 1;
 
-														let game_wire_str = serde_json::to_string(&game_wire).unwrap();
+															let game_wire = MsgLoadGameRes{
+																cmd: "load_game".to_string(),
+																success: true,
+																game: GameWire{
+																	id:	"azx".to_string(),
+																	board: board,
+																	players: ["ab1".to_string(), "ab2".to_string()],
+																	next_turn: 0,
+																},
+															};
 
-														if &msg.id[..] == "azx" {	// Test game
+															let game_wire_str = serde_json::to_string(&game_wire).unwrap();
 															let message: Message = Message::text(game_wire_str);
 															sender.send_message(&message).unwrap();
 														}
