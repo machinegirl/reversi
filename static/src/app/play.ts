@@ -2,7 +2,7 @@ import { Component, OnInit} from '@angular/core';
 import {WebsocketService} from './websocket.service';
 import {ReversiService} from './reversi.service';
 import {Header} from './header';
-import {Player} from './player'
+import {Player} from './player';
 
 @Component({
   selector: 'Play',
@@ -29,7 +29,7 @@ export class Play implements OnInit {
 
 			  window.clearInterval(intHandle);
 		  }
-	  }).bind(this), 500)
+	  }).bind(this), 500);
 	//   this.reversiService.drawGameBoard(this.reversiService.gameBoard);
   }
 

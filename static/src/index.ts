@@ -17,7 +17,7 @@ import {UIRouterConfig, UIROUTER_PROVIDERS, UiView} from 'ui-router-ng2';
 import {LocationStrategy, PathLocationStrategy, PlatformLocation} from '@angular/common';
 import {BrowserPlatformLocation} from '@angular/platform-browser';
 import {MyUIRouterConfig} from './routes';
-import {ReversiService} from './app/reversi.service'
+import {ReversiService} from './app/reversi.service';
 import {WebsocketService} from './app/websocket.service';
 
 declare var process: any;
