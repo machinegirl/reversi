@@ -61,11 +61,11 @@ impl<'a> Game<'a> {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
 struct GameWire {
-	id: 		String,
-	board: 		[[u8; 8]; 8],
-	players: 	[String; 2],
-	next_turn: 	u8,
-	pieces:		[u8; 2],
+	id: 			String,
+	board: 			[[u8; 8]; 8],
+	players: 		[String; 2],
+	player_turn:	u8,
+	pieces:			[u8; 2],
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -468,7 +468,7 @@ fn ws_handler(server: Server) {
 														if &msg.id[..] == "azx" {
 
 															let mut board = [[0u8; 8]; 8];
-															
+
 															let game_wire = MsgLoadGameRes{
 																cmd: "load_game".to_string(),
 																success: true,
@@ -476,7 +476,7 @@ fn ws_handler(server: Server) {
 																	id:	"azx".to_string(),
 																	board: board,
 																	players: [token.claims.sub.clone(), token.claims.sub.clone()],
-																	next_turn: 0,
+																	player_turn: 0,
 																	pieces: [32u8, 32u8],
 																},
 															};
