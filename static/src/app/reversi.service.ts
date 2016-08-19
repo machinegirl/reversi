@@ -3,34 +3,36 @@ import { Injectable} from '@angular/core';
 @Injectable()
 export class ReversiService {
 
-	public gameBoard: Array<Array<number>>;
+	// public gameBoard: Array<Array<number>>;
 	public sockHandle: any;
 	public game: any;
 
 	init() {
 		console.log('reversi service started');
 
-		this.gameBoard = [
-			[1, 0, 0, 0, 0, 0, 0, 0],
-			[0, 1, 0, 0, 0, 2, 0, 0],
-			[0, 0, 2, 0, 0, 0, 1, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 1, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 2, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 1, 0, 0, 0]
-		];
+		// this.gameBoard = [
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0],
+		// 	[0, 0, 0, 0, 0, 0, 0, 0]
+		// ];
 
-		let c = <HTMLCanvasElement> document.getElementById('gameBoard');
-		if (typeof c !== 'undefined') {
-			let ctx = <CanvasRenderingContext2D> c.getContext('2d');
-			// console.log(ctx);
-			ctx.fillStyle = '#0f8f2f';
-			ctx.fillRect(0, 0, 400, 400);
+		if (window.location.pathname === '/play') {
+			let c = <HTMLCanvasElement> document.getElementById('gameBoard');
+			if (typeof c !== 'undefined') {
+				let ctx = <CanvasRenderingContext2D> c.getContext('2d');
+				// console.log(ctx);
+				ctx.fillStyle = '#0f8f2f';
+				ctx.fillRect(0, 0, 400, 400);
 
-			// this.drawGameBoard(gameBoard);
-		} else {
-			// console.log('c: ' + c);
+				// this.drawGameBoard(gameBoard);
+			} else {
+				// console.log('c: ' + c);
+			}
 		}
 	}
 
@@ -73,23 +75,26 @@ export class ReversiService {
 		}
 	}
 
-	newGame() {
-		let gameBoard = [];
-		for (let i = 0; i < 8; i++) {
-			let row = [];
-			for (let j = 0; j < 8; j++) {
-				row.push(0);
-			}
-			gameBoard.push(row);
-		}
-		this.gameBoard = gameBoard;
-	}
+	// newGame() {
+	// 	let gameBoard = [];
+	// 	for (let i = 0; i < 8; i++) {
+	// 		let row = [];
+	// 		for (let j = 0; j < 8; j++) {
+	// 			row.push(0);
+	// 		}
+	// 		gameBoard.push(row);
+	// 	}
+	// 	this.gamed = gameBoard;
+	// }
 
 	loadGame(id) {
-			this.sockHandle.send(JSON.stringify({
-				'cmd': 'load_game',
-				'id': id
-			}));
+		let idToken = localStorage.getItem('google_id_token');
+
+		this.sockHandle.send(JSON.stringify({
+			'cmd': 'load_game',
+			'id_token': idToken,
+			'id': id
+		}));
 
 	}
 
