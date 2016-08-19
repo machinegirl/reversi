@@ -4,21 +4,15 @@ import { Injectable} from '@angular/core';
 export class ReversiService {
 
 	public gameBoard: Array<Array<any>>;
+	public sockHandle: any;
 
-	public static startGame(sockHandle) {
-		let msg = {
-			'cmd': 'start_game',
-			'id': ''
-		};
-		sockHandle.send(JSON.stringify(msg));
-	}
-
-	init() {
+	init(sockHandle) {
+		this.sockHandle = sockHandle;
 		console.log('reversi service started');
 		let c = <HTMLCanvasElement> document.getElementById('gameBoard');
 		if (typeof c !== 'undefined') {
 			let ctx = <CanvasRenderingContext2D> c.getContext('2d');
-			console.log(ctx);
+			// console.log(ctx);
 			ctx.fillStyle = '#0f8f2f';
 			ctx.fillRect(0, 0, 400, 400);
 			// let gameBoard = [
@@ -33,7 +27,7 @@ export class ReversiService {
 			// ];
 			// this.drawGameBoard(gameBoard);
 		} else {
-			console.log('c: ' + c);
+			// console.log('c: ' + c);
 		}
 	}
 
@@ -86,6 +80,14 @@ export class ReversiService {
 			gameBoard.push(row);
 		}
 		this.gameBoard = gameBoard;
+	}
+
+	loadGame(id) {
+			this.sockHandle.send(JSON.stringify({
+				'cmd': 'load_game',
+				'id': id
+			}));
+
 	}
 
 }

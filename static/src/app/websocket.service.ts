@@ -68,7 +68,10 @@ export class WebsocketService {
 				break;
 
 			case 'new_game':
-				window.location.assign('/play');
+				window.location.assign('/play?id=' + msg.id);
+				break;
+
+			case 'load_game':
 				break;
 
 			// case 'current_games':

@@ -20,10 +20,18 @@ export class Play implements OnInit {
   }
 
   ngOnInit() {
+	  let id = window.location.search;
+	  let idLength: number = id.length;
+	  id = id.substring(4, idLength);
+	  let intHandle = window.setInterval((function() {
+		  if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
+			  this.reversiService.init(this.websocketService.sock);
+			  this.reversiService.loadGame(id);
 
-	  this.reversiService.init();
-	  this.reversiService.newGame();
-	  this.reversiService.drawGameBoard(this.reversiService.gameBoard);
+			  window.clearInterval(intHandle);
+		  }
+	  }).bind(this), 500)
+	//   this.reversiService.drawGameBoard(this.reversiService.gameBoard);
   }
 
   move(e) {
