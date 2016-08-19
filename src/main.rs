@@ -113,6 +113,7 @@ struct MsgNewGame {
 struct MsgLoadGame {
 	cmd: String,
 	id: String,
+	id_token: GoogleSignInJwt,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -122,7 +123,7 @@ struct MsgLoadGameRes {
 	game: GameWire,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
 struct GoogleSignInJwt {
     hd:				String,
 	name: 			String,
@@ -474,7 +475,7 @@ fn ws_handler(server: Server) {
 																game: GameWire{
 																	id:	"azx".to_string(),
 																	board: board,
-																	players: ["ab1".to_string(), "ab2".to_string()],
+																	players: [msg.id_token.sub.clone(), msg.id_token.sub.clone()],
 																	next_turn: 0,
 																},
 															};
