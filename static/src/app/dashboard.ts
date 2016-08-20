@@ -3,6 +3,7 @@ import { Http, Response, ConnectionBackend, RequestOptions } 	from '@angular/htt
 import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 import {Player} from './player';
+import {Popup} from './popup';
 // import { Observable } from 'rxjs/Rx';
 
 
@@ -11,7 +12,7 @@ import {Player} from './player';
   selector: 'Dashboard',
   template: require('./dashboard.html'),
   providers: [],
-  directives: [Header, Player]
+  directives: [Header, Player, Popup]
 })
 export class Dashboard implements OnInit {
 

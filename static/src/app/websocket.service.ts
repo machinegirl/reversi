@@ -7,6 +7,7 @@ export class WebsocketService {
   public wsStatus: string;
   public sock: any;
   public reversiService: any;
+  public websocketConnected: boolean = false;
 
 	constructor(reversiService: ReversiService) {
 		this.reversiService = reversiService;
@@ -36,6 +37,7 @@ export class WebsocketService {
 
 		this.sock.onopen = (function(evt) {
 			if (this.sock.readyState === 1) {
+				this.websocketConnected = true;
 				this.connected = true;
 				this.wsStatus = 'connected';
 				console.log('connected to ' + sockAddr);
@@ -46,7 +48,7 @@ export class WebsocketService {
 
 		this.sock.onmessage = (function(e) {
 			console.log('websocket server msg:');
-			console.log(e);
+			console.log(e.data);
 
 			let msg = JSON.parse(e.data);
 
@@ -95,6 +97,7 @@ export class WebsocketService {
 		this.sock.onclose = (function() {
 			console.log('connection to ' + sockAddr + ' closed');
 			window.setTimeout(tryConnecting.bind(this), 5000);
+			this.websocketConnected = false;
 		}).bind(this);
 
 	}).bind(this);

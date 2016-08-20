@@ -46,14 +46,14 @@ export class Play implements OnInit {
 	  return;
 	}
 	// check if it's your turn
-	let idToken = localStorage.getItem('google_id_token');
-	let playerTurn = this.reversiService.game.player_turn;
-	if (this.reversiService.game.players[playerTurn] !== idToken) {
-	  console.log('not your turn');
-	  return;
+	if (!this.reversiService.checkTurn()) {
+		console.log('not your turn');
+		return;
 	}
+	console.log('its your turn!');
 
 	// support for opening moves
+	this.reversiService.doOpeningMove();
 
 
   }

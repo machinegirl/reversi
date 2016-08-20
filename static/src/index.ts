@@ -11,6 +11,7 @@ import './app/play.less';
 import './app/dashboard.less';
 import './app/header.less';
 import './app/player.less';
+import './app/popup.less';
 
 import {enableProdMode, provide} from '@angular/core';
 import {UIRouterConfig, UIROUTER_PROVIDERS, UiView} from 'ui-router-ng2';
@@ -19,6 +20,7 @@ import {BrowserPlatformLocation} from '@angular/platform-browser';
 import {MyUIRouterConfig} from './routes';
 import {ReversiService} from './app/reversi.service';
 import {WebsocketService} from './app/websocket.service';
+import {AUTH_PROVIDERS} from 'angular2-jwt';
 
 declare var process: any;
 // declare var onSignIn: any;
@@ -28,7 +30,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 bootstrap(UiView, [
-  ...UIROUTER_PROVIDERS, HTTP_PROVIDERS,
+  ...UIROUTER_PROVIDERS, HTTP_PROVIDERS, AUTH_PROVIDERS,
   provide(ReversiService, {useClass: ReversiService}),
   provide(WebsocketService, {useClass: WebsocketService, deps: [ReversiService]}),
   provide(LocationStrategy, {useClass: PathLocationStrategy}),

@@ -1,4 +1,6 @@
 import { Injectable} from '@angular/core';
+import {JwtHelper} from 'angular2-jwt';
+
 
 @Injectable()
 export class ReversiService {
@@ -8,6 +10,8 @@ export class ReversiService {
 	public game: any;
 	public numPieces0: number;
 	public numPieces1: number;
+	jwtHelper: JwtHelper = new JwtHelper();
+
 
 
 	init() {
@@ -104,6 +108,26 @@ export class ReversiService {
 	setupGame(game) {
 		this.game = game;
 		this.drawGameBoard(this.game.board);
+
+	}
+
+	checkTurn() {
+		let idToken = this.jwtHelper.decodeToken(localStorage.getItem('google_id_token')).sub;
+		let playerTurn = this.game.player_turn;
+		if (this.game.players[playerTurn] !== idToken) {
+		  return false;
+		} else {
+		  return true;
+	  }
+	}
+
+	doOpeningMove() {
+		// let idToken = this.jwtHelper.decodeToken(localStorage.getItem('google_id_token')).sub;
+		if (this.game.pieces[this.game.player_turn] > 30) {
+			console.log('do opening move');
+		} else {
+			console.log('make a real move');
+		}
 
 	}
 

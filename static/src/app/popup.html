@@ -1,0 +1,13 @@
+<div id="popup" *ngIf="!websocketService.websocketConnected">
+	<span id="title">Websocket not connected. Connecting<span *ngIf="dot1">.</span><span *ngIf="dot2">.</span><span *ngIf="dot3">.</span></span>
+	<div class="inner">
+		<p>If this message persists for more than 10 seconds, follow these steps to allow connection to our secure websocket server</p>
+		<ul>
+			<li> browse <a href="https://104.196.159.79:8056/" target="_blank">here</a> (link will open in new tab)</li>
+			<li> click <i>Advanced</i></li>
+			<li> choose <i>Continue to site</i> or <i>Add exception</i></li>
+			<li> You will get an error, but that's ok. Return here, and you will be connected shortly
+		</ul>
+		<p>If you still can't connect, our websocket server may be down. Please wait, and you will be connected as soon as possible</p>
+	</div>
+</div>
