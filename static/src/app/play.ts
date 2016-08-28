@@ -4,6 +4,9 @@ import {ReversiService} from './reversi.service';
 import {Header} from './header';
 import {Player} from './player';
 
+// declare var pubnub: any;
+declare var PubNub: any;
+
 @Component({
   selector: 'Play',
   template: require('./play.html'),
@@ -12,6 +15,7 @@ import {Player} from './player';
 })
 export class Play implements OnInit {
 
+  pubnub: any;
 
   constructor(private websocketService: WebsocketService, private reversiService: ReversiService) {
 	  this.websocketService = websocketService;
@@ -59,7 +63,42 @@ export class Play implements OnInit {
   } else {
     console.log('invalid move');
   }
+  }
 
+  // A PubNub example.
+  pubHello() {
+    this.pubnub = new PubNub({
+        publishKey : 'pub-c-779adc9c-2600-4670-a447-40cb9e89c065',
+        subscribeKey : 'sub-c-190b1168-6cc7-11e6-b0c8-02ee2ddab7fe'
+    });
 
+    var publishSampleMessage = (function() {
+        console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
+        var publishConfig = {
+            channel : 'Channel-r9gytcboy',
+            message : 'Hello from PubNub Docs!'
+        };
+        this.pubnub.publish(publishConfig, function(status, response) {
+            console.log(status, response);
+        });
+    }).bind(this);
+
+    this.pubnub.addListener({
+        status: function(statusEvent) {
+            if (statusEvent.category === 'PNConnectedCategory') {
+                publishSampleMessage();
+            }
+        },
+        message: function(message) {
+            console.log('New Message!!', message);
+        },
+        presence: function(presenceEvent) {
+            // handle presence
+        }
+    });
+    console.log('Subscribing..');
+    this.pubnub.subscribe({
+        channels: ['Channel-r9gytcboy']
+    });
   }
 }
