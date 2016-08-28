@@ -121,14 +121,40 @@ export class ReversiService {
 	  }
 	}
 
-	doOpeningMove() {
+	checkMove(row, column) {
+		let validMoves = [];
 		// let idToken = this.jwtHelper.decodeToken(localStorage.getItem('google_id_token')).sub;
 		if (this.game.pieces[this.game.player_turn] > 30) {
-			console.log('do opening move');
+			console.log('player ' + this.game.player_turn + ': do opening move');
+			if (this.game.player_turn === 0) {
+				validMoves = [[3, 3], [4, 4]];
+			} else if (this.game.player_turn === 1) {
+				validMoves = [[4, 3], [3, 4]];
+			}
 		} else {
 			console.log('make a real move');
+			validMoves = this.validMoves();
+		}
+		for (let i = 0; i < <number>validMoves.length; i++) {
+			if (validMoves[i][0] === row && validMoves[i][1] === column) {
+				this.game.board[row][column] = this.game.player_turn + 1;
+				return true;
+			}
 		}
 
+		return false;
+
+	}
+
+	validMoves() {
+		let validMoves = [];
+		let gameBoardLength: number = this.game.board.length;
+
+		for (let i = 0; i < gameBoardLength; i++) {
+
+		}
+
+		return validMoves;
 	}
 
 }

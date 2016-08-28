@@ -42,18 +42,23 @@ export class Play implements OnInit {
 	let clickedColumn = Math.floor(e.offsetX / tileW);
 	let clickedTile = this.reversiService.game.board[clickedRow][clickedColumn];
 	if (clickedTile !== 0) {
-	  console.log('invalid move');
+	  console.log('invalid move: you must click on an empty tile');
 	  return;
 	}
 	// check if it's your turn
 	if (!this.reversiService.checkTurn()) {
-		console.log('not your turn');
+		// console.log('not your turn');
 		return;
 	}
-	console.log('its your turn!');
+	// console.log('its your turn!');
 
-	// support for opening moves
-	this.reversiService.doOpeningMove();
+	let moveCheck = this.reversiService.checkMove(clickedRow, clickedColumn);
+  if (moveCheck) {
+    console.log('valid move');
+    this.reversiService.drawGameBoard(this.reversiService.game.board);
+  } else {
+    console.log('invalid move');
+  }
 
 
   }
