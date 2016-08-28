@@ -53,9 +53,30 @@ export class Play implements OnInit {
 	// console.log('its your turn!');
 
 	let moveCheck = this.reversiService.checkMove(clickedRow, clickedColumn);
+  let game = this.reversiService.game;
   if (moveCheck) {
     console.log('valid move');
-    this.reversiService.drawGameBoard(this.reversiService.game.board);
+    game.board[clickedRow][clickedColumn] = game.player_turn + 1;
+    game.pieces[game.player_turn] = game.pieces[game.player_turn] - 1;
+    game.player_turn = (game.player_turn + 1)%2;
+
+    // this.reversiService.drawGameBoard(this.reversiService.game.board);
+    let sendMsgIntHandle =  window.setInterval((function() {
+      let idToken = localStorage.getItem('google_id_token');
+      if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
+        this.websocketService.sock.send(JSON.stringify({
+          'cmd': 'check_move',
+          'id_token': idToken,
+          'id': 'azx',
+          'game': this.reversiService.game
+        }));
+
+        window.clearInterval(sendMsgIntHandle);
+       } else {
+         //do nothing
+       }
+     }).bind(this), 500);
+
   } else {
     console.log('invalid move');
   }
