@@ -88,6 +88,20 @@ export class WebsocketService {
 			// case 'current_games':
 			// 	break;
 
+      case 'check_move': {
+        if (msg.valid) {
+          this.reversiService.drawGameBoard(this.reversiService.game.board);
+        } else {
+          console.log('backend move check failed!')
+          let game = this.reversiService.game;
+          game.player_turn = (game.player_turn + 1)%2;
+          game.pieces[game.player_turn] = game.pieces[game.player_turn] +1;
+          //backend will return last valid game board
+          //set gameboard to returned gameboard
+        }
+        break;
+      }
+
 			default:
 				console.log('websocket server msg not understood');
 			}

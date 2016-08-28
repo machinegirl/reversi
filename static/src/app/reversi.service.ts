@@ -137,7 +137,6 @@ export class ReversiService {
 		}
 		for (let i = 0; i < <number>validMoves.length; i++) {
 			if (validMoves[i][0] === row && validMoves[i][1] === column) {
-				this.game.board[row][column] = this.game.player_turn + 1;
 				return true;
 			}
 		}
