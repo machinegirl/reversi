@@ -124,6 +124,15 @@ struct MsgLoadGameRes {
 	game: GameWire,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct MsgCheckMove {
+	cmd: String,
+	id: String,
+	id_token: String,
+	game: GameWire,
+}
+
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, RustcDecodable, RustcEncodable)]
 struct GoogleSignInJwt {
     hd:				String,
@@ -485,6 +494,18 @@ fn ws_handler(server: Server) {
 															let message: Message = Message::text(game_wire_str);
 															sender.send_message(&message).unwrap();
 														}
+													},
+													Err(e) => {
+														println!("Error: {:?}", e);
+													}
+												}
+											},
+											"check_move" => {
+
+												match serde_json::from_str::<MsgCheckMove>(&String::from_utf8_lossy(&*message.payload)) {
+													Ok(msg) => {
+														let message: Message = Message::text(format!("{{\"cmd\": \"check_move\", \"valid\": true}}"));
+														sender.send_message(&message).unwrap();
 													},
 													Err(e) => {
 														println!("Error: {:?}", e);
