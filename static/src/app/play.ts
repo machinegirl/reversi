@@ -68,14 +68,14 @@ export class Play implements OnInit {
   // A PubNub example.
   pubHello() {
     this.pubnub = new PubNub({
-        publishKey : 'pub-c-779adc9c-2600-4670-a447-40cb9e89c065',
-        subscribeKey : 'sub-c-190b1168-6cc7-11e6-b0c8-02ee2ddab7fe'
+        publishKey : 'pub-c-1fe9d7cd-6d1c-46d6-bc97-efcbbab4d6c2',
+        subscribeKey : 'sub-c-d135f9a0-6ccd-11e6-92a0-02ee2ddab7fe'
     });
 
     var publishSampleMessage = (function() {
         console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
         var publishConfig = {
-            channel : 'Channel-r9gytcboy',
+            channel : 'Channel-5bk7g4h8f',
             message : 'Hello from PubNub Docs!'
         };
         this.pubnub.publish(publishConfig, function(status, response) {
@@ -98,7 +98,7 @@ export class Play implements OnInit {
     });
     console.log('Subscribing..');
     this.pubnub.subscribe({
-        channels: ['Channel-r9gytcboy']
+        channels: ['Channel-5bk7g4h8f']
     });
   }
 }
