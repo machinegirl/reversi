@@ -3,7 +3,9 @@
 	<div class="gameboard">
 		<canvas id="gameBoard" width="400" height="400" (click)="move($event)"></canvas>
 	</div>
+
 	<div class="player">
 		<Player></Player>
+		<input type="submit" (click)="pubHello()" value="Pub">
 	</div>
 </div>
