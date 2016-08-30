@@ -4,8 +4,7 @@ import {ReversiService} from './reversi.service';
 import {Header} from './header';
 import {Player} from './player';
 
-// declare var pubnub: any;
-declare var PubNub: any;
+declare var Pusher: any;
 
 @Component({
   selector: 'Play',
@@ -62,7 +61,7 @@ export class Play implements OnInit {
     console.log('valid move');
     game.board[clickedRow][clickedColumn] = game.player_turn + 1;
     game.pieces[game.player_turn] = game.pieces[game.player_turn] - 1;
-    game.player_turn = (game.player_turn + 1)%2;
+    game.player_turn = (game.player_turn + 1) % 2;
 
     // this.reversiService.drawGameBoard(this.reversiService.game.board);
     let sendMsgIntHandle =  window.setInterval((function() {
@@ -86,40 +85,19 @@ export class Play implements OnInit {
   }
   }
 
-  // A PubNub example.
-  pubHello() {
-    this.pubnub = new PubNub({
-        publishKey : 'pub-c-1fe9d7cd-6d1c-46d6-bc97-efcbbab4d6c2',
-        subscribeKey : 'sub-c-d135f9a0-6ccd-11e6-92a0-02ee2ddab7fe'
+  // A Pusher example.
+  pusherHello() {
+
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('5b8ecce2b0bba5818f9d', {
+      encrypted: true
     });
 
-    var publishSampleMessage = (function() {
-        console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
-        var publishConfig = {
-            channel : 'Channel-5bk7g4h8f',
-            message : 'Hello from PubNub Docs!'
-        };
-        this.pubnub.publish(publishConfig, function(status, response) {
-            console.log(status, response);
-        });
-    }).bind(this);
-
-    this.pubnub.addListener({
-        status: function(statusEvent) {
-            if (statusEvent.category === 'PNConnectedCategory') {
-                publishSampleMessage();
-            }
-        },
-        message: function(message) {
-            console.log('New Message!!', message);
-        },
-        presence: function(presenceEvent) {
-            // handle presence
-        }
-    });
-    console.log('Subscribing..');
-    this.pubnub.subscribe({
-        channels: ['Channel-5bk7g4h8f']
+    var channel = pusher.subscribe('private-channel');
+    channel.bind('pusher:subscription_succeeded', function() {
+      var triggered = channel.trigger('client-hello', {some: {data: true}});
     });
   }
 }

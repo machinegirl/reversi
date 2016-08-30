@@ -1,5 +1,5 @@
 import { Component, OnInit, Input} 	from '@angular/core';
-import { Http, Response, ConnectionBackend, RequestOptions } 	from '@angular/http';
+import { Http} 	from '@angular/http';
 import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 import {Player} from './player';
