@@ -21,6 +21,10 @@ import {MyUIRouterConfig} from './routes';
 import {ReversiService} from './app/reversi.service';
 import {WebsocketService} from './app/websocket.service';
 import {AUTH_PROVIDERS} from 'angular2-jwt';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/observable/throw';
+
 
 declare var process: any;
 // declare var onSignIn: any;
