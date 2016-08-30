@@ -92,7 +92,7 @@ export class WebsocketService {
         if (msg.valid) {
           this.reversiService.drawGameBoard(this.reversiService.game.board);
         } else {
-          console.log('backend move check failed!')
+          console.log('backend move check failed!');
           let game = this.reversiService.game;
           game.player_turn = (game.player_turn + 1)%2;
           game.pieces[game.player_turn] = game.pieces[game.player_turn] +1;
