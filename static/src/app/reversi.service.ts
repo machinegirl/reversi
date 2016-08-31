@@ -97,11 +97,11 @@ export class ReversiService {
 	loadGame(id) {
 		let idToken = localStorage.getItem('google_id_token');
 
-		this.sockHandle.send(JSON.stringify({
-			'cmd': 'load_game',
-			'id_token': idToken,
-			'id': id
-		}));
+		// this.sockHandle.send(JSON.stringify({
+		// 	'cmd': 'load_game',
+		// 	'id_token': idToken,
+		// 	'id': id
+		// }));
 
 	}
 
