@@ -1,6 +1,6 @@
 import { Component, OnInit, Input} 	from '@angular/core';
 import { Http} 	from '@angular/http';
-import {WebsocketService} from './websocket.service';
+// import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 import {Player} from './player';
 import {Popup} from './popup';
@@ -18,30 +18,38 @@ export class Dashboard implements OnInit {
 
 	@Input() public dashboard: Dashboard;
 
-	constructor(private websocketService: WebsocketService, private http: Http) {
-		this.websocketService = websocketService;
+	constructor(private http: Http) {
+		// this.websocketService = websocketService;
 		this.http = http;
 	}
 
 	ngOnInit() {
 
-		let sendMsgIntHandle =  window.setInterval((function() {
-			let idToken = localStorage.getItem('google_id_token');
-			if (typeof idToken === 'undefined' || idToken === null) {
-				window.location.assign('/');
-				return;
-			}
-			if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-				this.websocketService.sock.send(JSON.stringify({
-					'cmd': 'logged_in',
-					'id_token': idToken
-				}));
+		// let sendMsgIntHandle =  window.setInterval((function() {
+		// 	let idToken = localStorage.getItem('google_id_token');
+		// 	if (typeof idToken === 'undefined' || idToken === null) {
+		// 		window.location.assign('/');
+		// 		return;
+		// 	}
+		// 	if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
+		// 		this.websocketService.sock.send(JSON.stringify({
+		// 			'cmd': 'logged_in',
+		// 			'id_token': idToken
+		// 		}));
+    //
+		// 		window.clearInterval(sendMsgIntHandle);
+		//    } else {
+		// 	   //do nothing
+		//    }
+	  //  }).bind(this), 500);
 
-				window.clearInterval(sendMsgIntHandle);
-		   } else {
-			   //do nothing
-		   }
-	   }).bind(this), 500);
+	let idToken = localStorage.getItem('google_id_token');
+	if (typeof idToken === 'undefined' || idToken === null) {
+		window.location.assign('/');
+		return;
+	}
+
+  // Send	{ 'cmd': 'logged_in',	'id_token': idToken	} to backend
 
 		console.log('dashboard loaded');
 	}

@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {WebsocketService} from './websocket.service';
+// import {WebsocketService} from './websocket.service';
 
 @Component({
   selector: 'Header',
@@ -8,11 +8,11 @@ import {WebsocketService} from './websocket.service';
 })
 export class Header implements OnInit {
 
-	constructor(private websocketService: WebsocketService) {
-		this.websocketService = websocketService;
+	constructor() {
+		// this.websocketService = websocketService;
 	}
 
 	ngOnInit() {
-		this.websocketService.init();
+		// this.websocketService.init();
 	}
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit} from '@angular/core';
 import { Http, Response, Headers, RequestOptions } from '@angular/http';
-import {WebsocketService} from './websocket.service';
+// import {WebsocketService} from './websocket.service';
 import {ReversiService} from './reversi.service';
 import {Header} from './header';
 import {Player} from './player';
@@ -21,8 +21,8 @@ export class Play implements OnInit {
   subscribedPubnubSystem: boolean;
   subscribedPubnubSystem2: boolean;
 
-  constructor(private websocketService: WebsocketService, private reversiService: ReversiService, private http: Http) {
-	  this.websocketService = websocketService;
+  constructor(private reversiService: ReversiService, private http: Http) {
+	  // this.websocketService = websocketService;
 	  this.reversiService = reversiService;
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('play controller started');
@@ -32,14 +32,15 @@ export class Play implements OnInit {
 	  let id = window.location.search;
 	  let idLength: number = id.length;
 	  id = id.substring(4, idLength);
-	  let intHandle = window.setInterval((function() {
-		  if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-			  this.reversiService.loadGame(id);
+    this.reversiService.loadGame(id);
 
-			  window.clearInterval(intHandle);
-		  }
-	  }).bind(this), 500);
-	//   this.reversiService.drawGameBoard(this.reversiService.gameBoard);
+	  // let intHandle = window.setInterval((function() {
+		//   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
+		// 	  this.reversiService.loadGame(id);
+    //
+		// 	  window.clearInterval(intHandle);
+		//   }
+	  // }).bind(this), 500);
   }
 
   move(e) {
@@ -69,21 +70,24 @@ export class Play implements OnInit {
       game.player_turn = (game.player_turn + 1) % 2;
 
       // this.reversiService.drawGameBoard(this.reversiService.game.board);
-      let sendMsgIntHandle =  window.setInterval((function() {
-        let idToken = localStorage.getItem('google_id_token');
-        if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-          this.websocketService.sock.send(JSON.stringify({
-            'cmd': 'check_move',
-            'id_token': idToken,
-            'id': 'azx',
-            'game': this.reversiService.game
-          }));
+      let idToken = localStorage.getItem('google_id_token');
 
-          window.clearInterval(sendMsgIntHandle);
-         } else {
-           //do nothing
-         }
-       }).bind(this), 500);
+      // Send { 'cmd': 'check_move', 'id_token': idToken, 'id': 'azx', 'game': this.reversiService.game} to backend
+
+      // let sendMsgIntHandle =  window.setInterval((function() {
+      //   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
+      //     this.websocketService.sock.send(JSON.stringify({
+      //       'cmd': 'check_move',
+      //       'id_token': idToken,
+      //       'id': 'azx',
+      //       'game': this.reversiService.game
+      //     }));
+      //
+      //     window.clearInterval(sendMsgIntHandle);
+      //    } else {
+      //      //do nothing
+      //    }
+      //  }).bind(this), 500);
 
     } else {
       console.log('invalid move');

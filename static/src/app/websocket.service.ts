@@ -1,3 +1,5 @@
+// DEPRECATED
+
 import { Injectable } from '@angular/core';
 import {ReversiService} from './reversi.service';
 

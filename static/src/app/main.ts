@@ -1,5 +1,5 @@
 import { Component, OnInit, Input} from '@angular/core';
-import {WebsocketService} from './websocket.service';
+// import {WebsocketService} from './websocket.service';
 import {Header} from './header';
 
 
@@ -13,8 +13,8 @@ export class Main implements OnInit {
 
   @Input() public main: Main;
 
-  constructor(private websocketService: WebsocketService) {
-	  this.websocketService = websocketService;
+  constructor() {
+	  // this.websocketService = websocketService;
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('main controller started');
   }
@@ -25,19 +25,22 @@ export class Main implements OnInit {
             console.log('Name: ' + profile.getName());
 			let idToken = googleUser.getAuthResponse().id_token;
 			localStorage.setItem('google_id_token', idToken);
-			let sendMsgIntHandle =  window.setInterval((function() {
-            	if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
-                	this.websocketService.sock.send(JSON.stringify({
-                   		'cmd': 'login',
-                        'id_token': idToken
-                    }));
 
-               		window.clearInterval(sendMsgIntHandle);
-               } else {
-                   console.log('trying again...');
-               }
-           }).bind(this), 500);
+      // Send { 'cmd': 'login', 'id_token': idToken } to backend
 
+			// let sendMsgIntHandle =  window.setInterval((function() {
+      //       	if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined') {
+      //           	this.websocketService.sock.send(JSON.stringify({
+      //              		'cmd': 'login',
+      //                   'id_token': idToken
+      //               }));
+      //
+      //          		window.clearInterval(sendMsgIntHandle);
+      //          } else {
+      //              console.log('trying again...');
+      //          }
+      //      }).bind(this), 500);
+      //
        }).bind(this);
 
     }
