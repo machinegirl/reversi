@@ -17,6 +17,9 @@ declare var PubNub: any;
 export class Play implements OnInit {
 
   pubnub: any;
+  pubnub2: any;
+  subscribedPubnubSystem: boolean;
+  subscribedPubnubSystem2: boolean;
 
   constructor(private websocketService: WebsocketService, private reversiService: ReversiService, private http: Http) {
 	  this.websocketService = websocketService;
@@ -88,24 +91,65 @@ export class Play implements OnInit {
   }
 
   // A pubnub example.
-  pubnubExample2() {
+  pubnubExample() {
     this.pubnub = new PubNub({
+        publishKey : 'pub-c-1fe9d7cd-6d1c-46d6-bc97-efcbbab4d6c2',
+        subscribeKey : 'sub-c-d135f9a0-6ccd-11e6-92a0-02ee2ddab7fe'
+    });
+
+    this.pubnub.addListener({
+        status: (function(statusEvent) {
+            if (statusEvent.category === 'PNConnectedCategory') {
+                // publishMessage();
+            }
+        }).bind(this),
+        message: (function(message) {
+            console.log('New Message!!', message);
+        }).bind(this),
+        presence: (function(presenceEvent) {
+            // handle presence
+        }).bind(this)
+    });
+
+    if (!this.subscribedPubnubSystem) {
+      console.log('Subscribing..');
+      this.pubnub.subscribe({
+          channels: ['Channel-reversi-system']
+      });
+      this.subscribedPubnubSystem = true;
+    }
+
+    let body = JSON.stringify({ 'message': 'Hey buddy' });
+    let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
+    let options = new RequestOptions({ headers: headers });
+
+    let response = this.http.post('https://teddo46zcb.execute-api.us-east-1.amazonaws.com/prod/pubnub_example', body, options)
+      .map(function(res: Response) {
+        let body = res.json();
+        return body || { };
+      })
+      .catch(function(error: any) {
+        let errMsg = (error.message) ? error.message :
+        error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+        console.log('!!error!!');
+        console.log(errMsg); // log to console instead
+        return Observable.throw(errMsg);
+      });
+
+    response.subscribe(
+      message => console.log(message),
+      err => console.log(err)
+    );
+  }
+
+  pubnubExample2() {
+
+    this.pubnub2 = new PubNub({
             publishKey : 'pub-c-d617ce4f-25a6-4cfc-9766-d0e16ba8764c',
             subscribeKey : 'sub-c-04c32322-6e74-11e6-80e7-02ee2ddab7fe'
         });
 
-        // let publishMessage = (function() {
-        //     console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
-        //     var publishConfig = {
-        //         channel : 'Channel-reversi-system',
-        //         message : 'Hello!'
-        //     };
-        //     this.pubnub.publish(publishConfig, function(status, response) {
-        //         console.log(status, response);
-        //     });
-        // }).bind(this);
-
-        this.pubnub.addListener({
+        this.pubnub2.addListener({
             status: (function(statusEvent) {
                 if (statusEvent.category === 'PNConnectedCategory') {
                     // publishMessage();
@@ -118,10 +162,14 @@ export class Play implements OnInit {
                 // handle presence
             }).bind(this)
         });
-        console.log('Subscribing..');
-        this.pubnub.subscribe({
-            channels: ['Channel-reversi-system']
-        });
+
+        if (!this.subscribedPubnubSystem2) {
+          console.log('Subscribing..');
+          this.pubnub2.subscribe({
+              channels: ['Channel-reversi-system']
+          });
+          this.subscribedPubnubSystem2 = true;
+        }
 
         let body = JSON.stringify({ 'message': 'Hey buddy' });
         let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
@@ -129,8 +177,6 @@ export class Play implements OnInit {
 
         let response = this.http.post('https://teddo46zcb.execute-api.us-east-1.amazonaws.com/prod/pubnub_example2', body, options)
           .map(function(res: Response) {
-            // console.log('response:');
-            // console.log(res);
             let body = res.json();
             return body || { };
           })
@@ -146,8 +192,5 @@ export class Play implements OnInit {
           message => console.log(message),
           err => console.log(err)
         );
-
-        // console.log('!!response!!');
-        // console.log(response);
       }
 }
