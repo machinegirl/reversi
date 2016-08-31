@@ -10,7 +10,7 @@ exports.handler = (e, ctx, callback) => {
   function publishSampleMessage() {
       console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
       var publishConfig = {
-          channel : 'hello_world',
+          channel : 'Channel-reversi-system',
           message : 'Hello from PubNub Docs!'
       };
       pubnub.publish(publishConfig, function(status, response) {
@@ -19,22 +19,24 @@ exports.handler = (e, ctx, callback) => {
       });
   }
 
-  pubnub.addListener({
-    status: function(statusEvent) {
-        if (statusEvent.category === 'PNConnectedCategory') {
-            publishSampleMessage();
-        }
-    },
-    message: function(message) {
-        console.log('New Message!!', message);
-    },
-    presence: function(presenceEvent) {
-        // handle presence
-    }
-  });
+  publishSampleMessage();
 
-  console.log('Subscribing..');
-  pubnub.subscribe({
-        channels: ['Channel-reversi-system']
-  });
+  // pubnub.addListener({
+  //   status: function(statusEvent) {
+  //       if (statusEvent.category === 'PNConnectedCategory') {
+  //           publishSampleMessage();
+  //       }
+  //   },
+  //   message: function(message) {
+  //       console.log('New Message!!', message);
+  //   },
+  //   presence: function(presenceEvent) {
+  //       // handle presence
+  //   }
+  // });
+  //
+  // console.log('Subscribing..');
+  // pubnub.subscribe({
+  //       channels: ['Channel-reversi-system']
+  // });
 }

@@ -88,22 +88,22 @@ export class Play implements OnInit {
   }
 
   // A pubnub example.
-  pubNubHello() {
+  pubnubExample2() {
     this.pubnub = new PubNub({
             publishKey : 'pub-c-92aab6bf-88ba-4ebc-a6b2-298484763e5d',
             subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'
         });
 
-        let publishMessage = (function() {
-            console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
-            var publishConfig = {
-                channel : 'Channel-reversi-system',
-                message : 'Hello!'
-            };
-            this.pubnub.publish(publishConfig, function(status, response) {
-                console.log(status, response);
-            });
-        }).bind(this);
+        // let publishMessage = (function() {
+        //     console.log('Since we\'re publishing on subscribe connectEvent, we\'re sure we\'ll receive the following publish.');
+        //     var publishConfig = {
+        //         channel : 'Channel-reversi-system',
+        //         message : 'Hello!'
+        //     };
+        //     this.pubnub.publish(publishConfig, function(status, response) {
+        //         console.log(status, response);
+        //     });
+        // }).bind(this);
 
         this.pubnub.addListener({
             status: (function(statusEvent) {
@@ -129,10 +129,10 @@ export class Play implements OnInit {
 
         let response = this.http.post('https://teddo46zcb.execute-api.us-east-1.amazonaws.com/prod/pubnub_example2', body, options)
           .map(function(res: Response) {
-            console.log('response:');
-            console.log(res);
+            // console.log('response:');
+            // console.log(res);
             let body = res.json();
-            return body.data || { };
+            return body || { };
           })
           .catch(function(error: any) {
             let errMsg = (error.message) ? error.message :
