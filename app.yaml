@@ -1,23 +1,27 @@
-runtime: custom
-vm: true
-
-network:
-    forwarded_ports:
-    - 8055
-    - 8056
-
-resources:
-    cpu: 0.5
-    memory_gb: 0.6
-    disk_size_gb: 10
-
-manual_scaling:
-    instances: 1
-
-beta_settings:
-    machine_type: f1-micro
+application: reversi-2016
+module: default
+version: 1
+runtime: go
+api_version: go1
 
 handlers:
-    - url: /.*
-      script: IGNORED
-      secure: always
+- url: /.*
+  script: _go_app
+
+skip_files:
+- static/bower_components
+- static/e2e
+- static/gulp
+- static/node_modules
+- static/src
+- static/.tmp
+- static/bower.json
+- static/gulpfile.js
+- static/karma.conf.js
+- static/package.json
+- static/protractor.conf.js
+- static/.bowerrc
+- static/.editorconfig
+- static/.gitignore
+- static/.jshintrc
+- static/.yo-rc.json

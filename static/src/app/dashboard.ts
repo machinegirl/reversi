@@ -43,11 +43,12 @@ export class Dashboard implements OnInit {
 		//    }
 	  //  }).bind(this), 500);
 
-	let idToken = localStorage.getItem('google_id_token');
-	if (typeof idToken === 'undefined' || idToken === null) {
-		window.location.assign('/');
-		return;
-	}
+  // TODO: Re-enable this.
+	// let idToken = localStorage.getItem('google_id_token');
+	// if (typeof idToken === 'undefined' || idToken === null) {
+	// 	window.location.assign('/');
+	// 	return;
+	// }
 
   // Send	{ 'cmd': 'logged_in',	'id_token': idToken	} to backend
 
