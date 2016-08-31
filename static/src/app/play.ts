@@ -90,8 +90,8 @@ export class Play implements OnInit {
   // A pubnub example.
   pubnubExample2() {
     this.pubnub = new PubNub({
-            publishKey : 'pub-c-92aab6bf-88ba-4ebc-a6b2-298484763e5d',
-            subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'
+            publishKey : 'pub-c-d617ce4f-25a6-4cfc-9766-d0e16ba8764c',
+            subscribeKey : 'sub-c-04c32322-6e74-11e6-80e7-02ee2ddab7fe'
         });
 
         // let publishMessage = (function() {
