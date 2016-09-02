@@ -160,7 +160,7 @@ export class ReversiService {
 		return validMoves;
 	}
 
-	login(idToken, redirect, on) {
+	login(idToken, redirect, on, callback) {
 		let body = JSON.stringify({ 'idToken': idToken });
 		let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
 		let options = new RequestOptions({ headers: headers });
@@ -182,7 +182,10 @@ export class ReversiService {
 			message => {
 				if ((message.success && on) || (!message.success && !on)) {
 					window.location.assign(redirect);
+					return;
 				}
+
+				callback();	// Login success
 			},
 			err => console.log(err)
 		);
