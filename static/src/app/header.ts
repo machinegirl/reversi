@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-// import {WebsocketService} from './websocket.service';
+import {ReversiService} from './reversi.service';
+
 
 @Component({
   selector: 'Header',
@@ -8,11 +9,11 @@ import {Component, OnInit} from '@angular/core';
 })
 export class Header implements OnInit {
 
-	constructor() {
+	constructor(private reversiService: ReversiService) {
 		// this.websocketService = websocketService;
 	}
 
 	ngOnInit() {
-		// this.websocketService.init();
+		this.reversiService.init();
 	}
 }

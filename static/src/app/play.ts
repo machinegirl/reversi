@@ -22,25 +22,25 @@ export class Play implements OnInit {
   subscribedPubnubSystem2: boolean;
 
   constructor(private reversiService: ReversiService, private http: Http) {
-	  // this.websocketService = websocketService;
 	  this.reversiService = reversiService;
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('play controller started');
   }
 
   ngOnInit() {
+
+      let idToken = localStorage.getItem('google_id_token');
+      if (typeof idToken === 'undefined' || idToken === null) {
+          window.location.assign('/');
+          return;
+      }
+
+      this.reversiService.login(idToken, '/', false);
+
 	  let id = window.location.search;
 	  let idLength: number = id.length;
 	  id = id.substring(4, idLength);
-    this.reversiService.loadGame(id);
-
-	  // let intHandle = window.setInterval((function() {
-		//   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-		// 	  this.reversiService.loadGame(id);
-    //
-		// 	  window.clearInterval(intHandle);
-		//   }
-	  // }).bind(this), 500);
+      this.reversiService.loadGame(id);
   }
 
   move(e) {

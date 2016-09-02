@@ -1,5 +1,7 @@
 import { Injectable} from '@angular/core';
 import {JwtHelper} from 'angular2-jwt';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Observable } from 'rxjs/Observable';
 
 
 @Injectable()
@@ -13,6 +15,8 @@ export class ReversiService {
 	jwtHelper: JwtHelper = new JwtHelper();
 
 
+	constructor(public http: Http) {
+	}
 
 	init() {
 		console.log('reversi service started');
@@ -154,6 +158,34 @@ export class ReversiService {
 		}
 
 		return validMoves;
+	}
+
+	login(idToken, redirect, on) {
+		let body = JSON.stringify({ 'idToken': idToken });
+		let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.post('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/login', body, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg); // log to console instead
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			message => {
+				if ((message.success && on) || (!message.success && !on)) {
+					window.location.assign(redirect);
+				}
+			},
+			err => console.log(err)
+		);
 	}
 
 }
