@@ -146,40 +146,12 @@ export class Play implements OnInit {
     );
   }
 
-  pubnubExample2() {
-
-    this.pubnub2 = new PubNub({
-            publishKey : 'pub-c-d617ce4f-25a6-4cfc-9766-d0e16ba8764c',
-            subscribeKey : 'sub-c-04c32322-6e74-11e6-80e7-02ee2ddab7fe'
-        });
-
-        this.pubnub2.addListener({
-            status: (function(statusEvent) {
-                if (statusEvent.category === 'PNConnectedCategory') {
-                    // publishMessage();
-                }
-            }).bind(this),
-            message: (function(message) {
-                console.log('New Message!!', message);
-            }).bind(this),
-            presence: (function(presenceEvent) {
-                // handle presence
-            }).bind(this)
-        });
-
-        if (!this.subscribedPubnubSystem2) {
-          console.log('Subscribing..');
-          this.pubnub2.subscribe({
-              channels: ['Channel-reversi-system']
-          });
-          this.subscribedPubnubSystem2 = true;
-        }
-
+  login() {
         let body = JSON.stringify({ 'message': 'Hey buddy' });
         let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
         let options = new RequestOptions({ headers: headers });
 
-        let response = this.http.post('https://teddo46zcb.execute-api.us-east-1.amazonaws.com/prod/pubnub_example2', body, options)
+        let response = this.http.post('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/login', body, options)
           .map(function(res: Response) {
             let body = res.json();
             return body || { };
@@ -196,5 +168,5 @@ export class Play implements OnInit {
           message => console.log(message),
           err => console.log(err)
         );
-      }
+    }
 }
