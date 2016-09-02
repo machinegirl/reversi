@@ -82,29 +82,6 @@ export class Play implements OnInit {
     }
   }
 
-  loggedIn(idToken) {
-      let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
-      let options = new RequestOptions({ headers: headers });
-
-      let response = this.http.get('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/logged_in', options)
-        .map(function(res: Response) {
-          let body = res.json();
-          return body || {};
-        })
-        .catch(function(error: any) {
-          let errMsg = (error.message) ? error.message :
-          error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-          console.log('!!error!!');
-          console.log(errMsg); // log to console instead
-          return Observable.throw(errMsg);
-        });
-
-      response.subscribe(
-        message => console.log(message),
-        err => console.log(err)
-      );
-  }
-
   login(idToken, redirect, on) {
         let body = JSON.stringify({ 'idToken': idToken });
         let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
@@ -141,66 +118,63 @@ export class Play implements OnInit {
               return;
           }
 
-          this.reversiService.login(idToken, '/', false);   // TODO: How do we tell if this fails so we can stop here?
+          this.reversiService.login(idToken, '/', false, () => {
 
-        this.pubnub = new PubNub({
-            publishKey : 'pub-c-1fe9d7cd-6d1c-46d6-bc97-efcbbab4d6c2',
-            subscribeKey : 'sub-c-d135f9a0-6ccd-11e6-92a0-02ee2ddab7fe'
-        });
+              this.pubnub = new PubNub({
+                  subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'
+              });
 
-        this.pubnub.addListener({
-            status: (function(statusEvent) {
-                if (statusEvent.category === 'PNConnectedCategory') {
-                    // publishMessage();
-                }
-            }).bind(this),
-            message: (function(message) {
-                console.log('New Message!!', message);
-            }).bind(this),
-            presence: (function(presenceEvent) {
-                // handle presence
-            }).bind(this)
-        });
+              this.pubnub.addListener({
+                  status: (function(statusEvent) {
+                      if (statusEvent.category === 'PNConnectedCategory') {
 
-        if (!this.subscribedPubnubSystem) {
-          console.log('Subscribing..');
-          this.pubnub.subscribe({
-              channels: ['game-xxxzzz']
+                      }
+                  }).bind(this),
+                  message: (function(message) {
+                      console.log('New Message!!', message);
+                  }).bind(this),
+                  presence: (function(presenceEvent) {
+
+                  }).bind(this)
+              });
+
+            console.log('Subscribing..');
+            this.pubnub.subscribe({
+                channels: ['game-xxxzzz']
+            });
+
+            let headers = new Headers({
+                'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
+                'Authorization': localStorage.getItem('google_id_token')
+            });
+            let options = new RequestOptions({ headers: headers });
+
+            let response = this.http.get('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/play', options)
+              .map(function(res: Response) {
+                let body = res.json();
+                return body || { };
+              })
+              .catch(function(error: any) {
+                let errMsg = (error.message) ? error.message :
+                error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+                console.log('!!error!!');
+                console.log(errMsg); // log to console instead
+                return Observable.throw(errMsg);
+              });
+
+            response.subscribe(
+              message => {
+                  console.log(message);
+                  let id = window.location.search;
+                   let idLength: number = id.length;
+                   id = id.substring(4, idLength);
+                  this.reversiService.loadGame(id);
+              },
+              err => console.log(err)
+            );
+
           });
-          this.subscribedPubnubSystem = true;
-        }
-
-        let headers = new Headers({
-            'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
-            'Authorization': localStorage.getItem('google_id_token')
-        });
-        let options = new RequestOptions({ headers: headers });
-
-        let response = this.http.get('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/play', options)
-          .map(function(res: Response) {
-            let body = res.json();
-            return body || { };
-          })
-          .catch(function(error: any) {
-            let errMsg = (error.message) ? error.message :
-            error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-            console.log('!!error!!');
-            console.log(errMsg); // log to console instead
-            return Observable.throw(errMsg);
-          });
-
-        response.subscribe(
-          message => {
-              console.log(message);
-              let id = window.location.search;
-        	  let idLength: number = id.length;
-        	  id = id.substring(4, idLength);
-              this.reversiService.loadGame(id);
-          },
-          err => console.log(err)
-        );
       }
-
 
       // // A pubnub example.
       // pubnubExample() {

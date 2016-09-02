@@ -24,9 +24,9 @@ export class Dashboard implements OnInit {
             return;
         }
 
-        this.reversiService.login(idToken, '/', false);
-
-		console.log('dashboard loaded');
+        this.reversiService.login(idToken, '/', false, () => {
+            console.log('dashboard loaded');
+        });
 	}
 
 	signOut() {
@@ -47,5 +47,13 @@ export class Dashboard implements OnInit {
 		googleAuth.signOut();
 		window.location.assign('/');
 	}
+
+    play(id) {
+        let url = 'play';
+        if (id) {
+            url += '?id=' + id;
+        }
+        window.location.assign(url);
+    }
 
 }
