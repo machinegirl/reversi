@@ -22,23 +22,13 @@ export class Play implements OnInit {
   subscribedPubnubSystem2: boolean;
 
   constructor(private reversiService: ReversiService, private http: Http) {
-	  // this.websocketService = websocketService;
 	  this.reversiService = reversiService;
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('play controller started');
   }
 
   ngOnInit() {
-
       this.play();
-
-	  // let intHandle = window.setInterval((function() {
-		//   if (typeof this.websocketService !== 'undefined' && typeof this.websocketService.sock !== 'undefined' && this.websocketService.sock.readyState === 1) {
-		// 	  this.reversiService.loadGame(id);
-    //
-		// 	  window.clearInterval(intHandle);
-		//   }
-	  // }).bind(this), 500);
   }
 
   move(e) {
@@ -140,6 +130,15 @@ export class Play implements OnInit {
       }
 
       play() {
+
+          let idToken = localStorage.getItem('google_id_token');
+          if (typeof idToken === 'undefined' || idToken === null) {
+              window.location.assign('/');
+              return;
+          }
+
+          this.reversiService.login(idToken, '/', false);   // TODO: How do we tell if this fails so we can stop here?
+
         this.pubnub = new PubNub({
             publishKey : 'pub-c-1fe9d7cd-6d1c-46d6-bc97-efcbbab4d6c2',
             subscribeKey : 'sub-c-d135f9a0-6ccd-11e6-92a0-02ee2ddab7fe'
