@@ -106,7 +106,7 @@ export class Play implements OnInit {
   }
 
   login(idToken, redirect, on) {
-        let body = JSON.stringify({ 'message': 'Hey buddy' });
+        let body = JSON.stringify({ 'idToken': idToken });
         let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
         let options = new RequestOptions({ headers: headers });
 
