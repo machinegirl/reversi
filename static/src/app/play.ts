@@ -172,7 +172,7 @@ export class Play implements OnInit {
 
         let headers = new Headers({
             'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
-            'Authorization': localStorage.getItem('id_token')
+            'Authorization': localStorage.getItem('google_id_token')
         });
         let options = new RequestOptions({ headers: headers });
 
