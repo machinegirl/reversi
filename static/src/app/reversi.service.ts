@@ -160,7 +160,7 @@ export class ReversiService {
 		return validMoves;
 	}
 
-	login(idToken, redirect, on, callback) {
+	login(idToken, callback) {
 		let body = JSON.stringify({ 'idToken': idToken });
 		let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
 		let options = new RequestOptions({ headers: headers });
@@ -180,14 +180,38 @@ export class ReversiService {
 
 		response.subscribe(
 			message => {
-				if ((message.success && on) || (!message.success && !on)) {
-					window.location.assign(redirect);
-					return;
-				}
-
-				callback();	// Login success
+				callback(message);	// Send back the result
 			},
 			err => console.log(err)
+		);
+	}
+
+	loggedIn(accessToken, callback) {
+		let headers = new Headers({
+			'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
+			'Authorization': 'Bearer ' + accessToken,
+		});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.get('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/logged_in', options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg); // log to console instead
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			loggedIn => {
+				callback(loggedIn);	// Send back the result
+			},
+			err => console.log(err)
+				console.log(err);
 		);
 	}
 

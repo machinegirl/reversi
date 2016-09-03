@@ -90,7 +90,7 @@ export class Play implements OnInit {
               return;
           }
 
-          this.reversiService.login(idToken, '/', false, () => {
+          this.reversiService.login(idToken, () => {
 
               this.pubnub = new PubNub({
                   subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'

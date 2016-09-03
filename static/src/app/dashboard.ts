@@ -18,14 +18,15 @@ export class Dashboard implements OnInit {
 
 	ngOnInit() {
 
-        let idToken = localStorage.getItem('google_id_token');
-        if (typeof idToken === 'undefined' || idToken === null) {
-            window.location.assign('/');
+        let accessToken = localStorage.getItem('reversiAccessToken');
+        if (typeof accessToken === 'undefined' || accessToken === null) {
+            // window.location.assign('/');
+            console.log(accessToken);
             return;
         }
 
-        this.reversiService.login(idToken, '/', false, () => {
-            console.log('dashboard loaded');
+        this.reversiService.loggedIn(accessToken, (loggedIn) => {
+            console.log(loggedIn);
         });
 	}
 
