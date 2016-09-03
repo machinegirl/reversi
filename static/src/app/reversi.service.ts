@@ -211,7 +211,6 @@ export class ReversiService {
 				callback(loggedIn);	// Send back the result
 			},
 			err => console.log(err)
-				console.log(err);
 		);
 	}
 
