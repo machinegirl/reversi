@@ -16,6 +16,7 @@ export class ReversiService {
 
 
 	constructor(public http: Http) {
+		this.xApiKey = '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL';	// NOTE: AWS API Gateway auth key
 	}
 
 	init() {
@@ -162,7 +163,7 @@ export class ReversiService {
 
 	login(idToken, callback) {
 		let body = JSON.stringify({ 'idToken': idToken });
-		let headers = new Headers({ 'X-Api-Key': '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL'});
+		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
 		let options = new RequestOptions({ headers: headers });
 
 		let response = this.http.post('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/login', body, options)
@@ -188,7 +189,7 @@ export class ReversiService {
 
 	loggedIn(accessToken, callback) {
 		let headers = new Headers({
-			'X-Api-Key': '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL',
+			'X-Api-Key': this.xApiKey,
 			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
 		let options = new RequestOptions({ headers: headers });

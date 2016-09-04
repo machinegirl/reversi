@@ -21,9 +21,10 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
 };
 
 module.exports.publish = function(e, ctx, callback, channel, message, callback2) {
+    var keys = JSON.parse(fs.readFileSync('keys/pubnub.keys')); // get publish and subscribe keys
     pubnub = new PubNub({
-        publishKey : 'pub-c-92aab6bf-88ba-4ebc-a6b2-298484763e5d',  // TODO: Load these from a file.
-        subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'
+        publishKey : keys.publish,
+        subscribeKey : keys.subscribe
     });
     var publishConfig = {
         channel : channel,

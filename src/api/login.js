@@ -1,6 +1,5 @@
 var https = require('https');
 var jwt = require('jsonwebtoken');
-// var time = require('time');
 var crypto = require('crypto');
 var fs = require('fs');
 
@@ -8,23 +7,20 @@ module.exports.handler = (e, ctx, callback) => {
 
     var idToken = e.idToken;
     var body = [];
-    // console.log('!!idToken!!')
-    // console.log(idToken);
 
     https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + idToken, function(res) {
-        // console.log('!!result!!');
-        // console.log(res);
+
         res.on('data', function(chunk) {
-
             body.push(chunk);
-
         }).on('end', function() {
 
             if (res.statusCode === 200) {
                 body = Buffer.concat(body).toString();
                 body = JSON.parse(body);
-                // console.log(body);
-                if (body.aud !== '402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com') {
+
+                var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
+
+                if (key.length > 0 && body.aud !== key) {
                     callback(null, {
                         'success': false,
                         'accessToken': null

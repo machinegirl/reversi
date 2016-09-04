@@ -7,6 +7,7 @@ api_version: go1
 handlers:
 - url: /.*
   script: _go_app
+  secure: always
 
 skip_files:
 - static/bower_components
@@ -25,3 +26,4 @@ skip_files:
 - static/.gitignore
 - static/.jshintrc
 - static/.yo-rc.json
+- src/api/
