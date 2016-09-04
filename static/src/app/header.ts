@@ -18,37 +18,46 @@ export class Header implements OnInit {
 
 	ngOnInit() {
 		this.reversiService.init();
-        window.setInterval((function() {
-            let accessToken = localStorage.getItem('reversiAccessToken');
-            if (typeof accessToken === 'undefined' || accessToken === null) {
-                window.location.assign('/');
-                return;
-            }
-            let headers = new Headers({
-                'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
-                'Authorization': 'Bearer ' + accessToken,
-            });
-            let options = new RequestOptions({ headers: headers });
+        // window.setInterval((function() {
+        //     let accessToken = localStorage.getItem('reversiAccessToken');
+        //     if (typeof accessToken === 'undefined' || accessToken === null) {
+        //         window.location.assign('/');
+        //         return;
+        //     }
+        //     let headers = new Headers({
+        //         'X-Api-Key': this.reversiService.xApiKey,
+        //         'X-Reversi-Auth': 'Bearer ' + accessToken,
+        //     });
+        //     let options = new RequestOptions({ headers: headers });
+        //
+        //     let response = this.http.put('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
+        //     .map(function(res: Response) {
+        //       let body = res.json();
+        //       return body || { };
+        //     })
+        //     .catch(function(error: any) {
+        //       let errMsg = (error.message) ? error.message :
+        //       error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+        //       console.log('!!error!!');
+        //       console.log(errMsg); // log to console instead
+        //       return Observable.throw(errMsg);
+        //     });
+        //
+        //     response.subscribe(
+        //         message => {
+        //             console.log('refresh token success: ' + message.success);
+        //             console.log('new access token: ' + message.accessToken);
+        //             localStorage.setItem('reversiAccessToken', message.accessToken);
+        //         },
+        //         err => console.log(err)
+        //     );
+        // }).bind(this), 1000 * 30);
 
-            let response = this.http.post('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/refresh_login', options)
-            .map(function(res: Response) {
-              let body = res.json();
-              return body || { };
-            })
-            .catch(function(error: any) {
-              let errMsg = (error.message) ? error.message :
-              error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-              console.log('!!error!!');
-              console.log(errMsg); // log to console instead
-              return Observable.throw(errMsg);
-            });
 
-            response.subscribe(
-                success => {
-                    console.log('refresh token success: ' + success);
-                },
-                err => console.log(err)
-            );
-        }).bind(this), 1000 * 60 * 20);
+
+        // window.setInterval((function() {
+        
+        // }).bind(this), 1000 * 30);
+
 	}
 }
