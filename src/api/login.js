@@ -4,7 +4,7 @@ var jwt = require('jsonwebtoken');
 var crypto = require('crypto');
 var fs = require('fs');
 
-exports.handler = (e, ctx, callback) => {
+module.exports.handler = (e, ctx, callback) => {
 
     var idToken = e.idToken;
     var body = [];
@@ -42,9 +42,9 @@ exports.handler = (e, ctx, callback) => {
 
                 var options = {
                     algorithm: 'RS256',
-                    issuer: 'https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod',
+                    issuer: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev',
                     subject: body.sub,
-                    audience: [body.sub, 'https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod', 'https://reversi-2016.appspot.com'],
+                    audience: [body.sub, 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev', 'https://reversi-2016.appspot.com'],
                     expiresIn: '1h',
                     notBefore: 0,
                     jwtid: jti

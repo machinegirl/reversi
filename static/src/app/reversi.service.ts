@@ -162,10 +162,10 @@ export class ReversiService {
 
 	login(idToken, callback) {
 		let body = JSON.stringify({ 'idToken': idToken });
-		let headers = new Headers({ 'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5'});
+		let headers = new Headers({ 'X-Api-Key': '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL'});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.post('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/login', body, options)
+		let response = this.http.post('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/login', body, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };
@@ -188,12 +188,12 @@ export class ReversiService {
 
 	loggedIn(accessToken, callback) {
 		let headers = new Headers({
-			'X-Api-Key': '6Tairgv32oa3OCOpcY0dP6YgyGKt2Fge2TTDPOP5',
-			'Authorization': 'Bearer ' + accessToken,
+			'X-Api-Key': '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL',
+			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.get('https://w0jk0atq5l.execute-api.us-east-1.amazonaws.com/prod/logged_in', options)
+		let response = this.http.get('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/logged_in', options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };

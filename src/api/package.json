@@ -1,13 +1,12 @@
 {
-  "name": "login",
+  "name": "reversi-api",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
   "dependencies": {
     "crypto": "0.0.3",
     "googleapis": "^12.4.0",
-    "jsonwebtoken": "^7.1.9",
-    "time": "^0.11.4"
+    "jsonwebtoken": "^7.1.9"
   },
   "devDependencies": {},
   "scripts": {
