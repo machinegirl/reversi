@@ -13,6 +13,7 @@ export class ReversiService {
 	public numPieces0: number;
 	public numPieces1: number;
 	jwtHelper: JwtHelper = new JwtHelper();
+	xApiKey: string;
 
 
 	constructor(public http: Http) {
