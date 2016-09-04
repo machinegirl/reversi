@@ -2,7 +2,7 @@
   "name": "logged_in",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "handler.js",
   "dependencies": {
     "crypto": "0.0.3",
     "googleapis": "^12.4.0",

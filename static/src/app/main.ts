@@ -24,6 +24,7 @@ export class Main implements OnInit {
     		let profile = googleUser.getBasicProfile();
             console.log('Name: ' + profile.getName());
 			let idToken = googleUser.getAuthResponse().id_token;
+            localStorage.setItem('google_id_token', idToken);
 
             this.reversiService.login(idToken, (message) => {
                 if (message.success) {

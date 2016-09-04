@@ -84,13 +84,16 @@ export class Play implements OnInit {
 
       play() {
 
-          let idToken = localStorage.getItem('google_id_token');
-          if (typeof idToken === 'undefined' || idToken === null) {
+          let accessToken = localStorage.getItem('reversiAccessToken');
+          if (typeof accessToken === 'undefined' || accessToken === null) {
               window.location.assign('/');
               return;
           }
 
-          this.reversiService.login(idToken, () => {
+          this.reversiService.login(accessToken, (loggedIn) => {
+              if (!loggedIn) {
+                  window.location.assign('/');
+              }
 
               this.pubnub = new PubNub({
                   subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'

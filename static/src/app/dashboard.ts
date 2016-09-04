@@ -26,7 +26,11 @@ export class Dashboard implements OnInit {
         }
 
         this.reversiService.loggedIn(accessToken, (loggedIn) => {
-            console.log(loggedIn);
+            if (loggedIn !== true) {
+                // console.log(loggedIn);
+                window.location.assign('./');
+                return;
+            };
         });
 	}
 
@@ -45,6 +49,7 @@ export class Dashboard implements OnInit {
 
 	authCallback(googleAuth) {
 		localStorage.removeItem('google_id_token');
+        localStorage.removeItem('reversiAccessToken');
 		googleAuth.signOut();
 		window.location.assign('/');
 	}
