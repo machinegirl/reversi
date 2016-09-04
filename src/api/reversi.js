@@ -6,7 +6,6 @@ var crypto = require('crypto');
 
 module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
-
     var makeAccessToken = (body) => {
         var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
         var now = Date.now()
