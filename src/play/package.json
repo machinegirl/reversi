@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "jsonwebtoken": "^7.1.9",
     "pubnub": "^4.0.8"
   },
   "devDependencies": {},
