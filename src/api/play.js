@@ -1,14 +1,15 @@
 var jwt = require('jsonwebtoken');
 var PubNub = require('pubnub');
+var fs = require('fs');
 
 module.exports.handler = (e, ctx, callback) => {
-
-    var idToken = e.Authorization;
-    var body = [];
-
-    var accessToken = e.Authorization.split(' ')[1];
+    console.log('!');
+    console.log(e);
+    var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
+    console.log('!!');
+    console.log(accessToken);
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
-    
+
     var decoded = jwt.verify(accessToken, cert, (err, decoded) => {
         if (err !== null) {
             console.log(err);
