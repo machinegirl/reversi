@@ -3,8 +3,11 @@ var jwt = require('jsonwebtoken');
 var PubNub = require('pubnub');
 var https = require('https');
 var crypto = require('crypto');
+var AWS = require('aws-sdk');
 
 module.exports.login = function(e, ctx, callback, decoded, callback2) {
+
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
     var makeAccessToken = (body) => {
         var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
@@ -85,11 +88,17 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         });
     } else {
         accessToken = makeAccessToken(decoded);
+
+        // TODO: Blacklist token
+
         callback2(accessToken);
     }
 };
 
 module.exports.logged_in = function(e, ctx, callback, callback2) {
+
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
     var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
     var options = {
@@ -103,6 +112,9 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
             callback(err);
             return;
         }
+
+        // TODO: Check blacklist
+
         callback2(decoded);
     });
 };
