@@ -182,51 +182,60 @@ export class ReversiService {
 
 		response.subscribe(
 			message => {
-
-				let refreshLogin = () => {
-		            let accessToken = localStorage.getItem('reversiAccessToken');
-		            if (typeof accessToken === 'undefined' || accessToken === null) {
-		                window.location.assign('/');
-		                return;
-		            }
-		            let headers = new Headers({
-		                'X-Api-Key': this.xApiKey,
-		                'X-Reversi-Auth': 'Bearer ' + accessToken,
-		            });
-		            let options = new RequestOptions({ headers: headers });
-
-		            let response = this.http.put('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
-		            .map(function(res: Response) {
-		              let body = res.json();
-		              return body || { };
-		            })
-		            .catch(function(error: any) {
-		              let errMsg = (error.message) ? error.message :
-		              error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		              console.log('!!error!!');
-		              console.log(errMsg); // log to console instead
-		              return Observable.throw(errMsg);
-		            });
-
-		            response.subscribe(
-		                message => {
-		                    console.log('refresh token success: ' + message.success);
-		                    console.log('new access token: ' + message.accessToken);
-		                    localStorage.setItem('reversiAccessToken', message.accessToken);
-		                },
-		                err => console.log(err)
-		            );
-		        };
-
-		        refreshLogin();
-
-		        window.setInterval(refreshLogin, 1000 * 30);
-
+		        window.setInterval(this.refreshLogin.bind(this), 1000 * 60);
 				callback(message);	// Send back the result
 			},
 			err => console.log(err)
 		);
 	}
+
+	refreshLogin() {
+		let accessToken = localStorage.getItem('reversiAccessToken');
+		if (typeof accessToken === 'undefined' || accessToken === null) {
+			window.location.assign('/');
+			return;
+		}
+
+		let decoded = this.jwtHelper.decodeToken(accessToken);
+
+		console.log(decoded.exp);
+		let now = Math.floor(Date.now()/1000);
+
+		if ((decoded.exp - now) > (60 * 5)) {
+			console.log('token good, no need to refresh');
+			return;
+		}
+
+		console.log('token too old, refreshing now');
+
+		let headers = new Headers({
+			'X-Api-Key': this.xApiKey,
+			'X-Reversi-Auth': 'Bearer ' + accessToken,
+		});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.put('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg); // log to console instead
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			message => {
+				console.log('refresh token success: ' + message.success);
+				console.log('new access token: ' + message.accessToken);
+				localStorage.setItem('reversiAccessToken', message.accessToken);
+			},
+			err => console.log(err)
+		);
+	};
 
 	loggedIn(accessToken, callback) {
 		let headers = new Headers({
