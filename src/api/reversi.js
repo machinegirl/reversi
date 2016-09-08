@@ -173,36 +173,41 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
             // Blacklist Token
             console.log('blacklisting token');
-            console.log('date as number');
-            console.log(Date.now());
-            console.log('date as string');
-            console.log((Date.now()).toString());
-            params = {
-              Attributes: [ /* required */
-                {
-                  Name: 'timestamp', /* required */
-                  Value: (Date.now()).toString(), /* required */
-                  Replace: true
-                },
-                /* more items */
-              ],
-              DomainName: 'reversi-blacklist', /* required */
-              ItemName: decoded.jti, /* required */
-            //   Expected: {
-            //     Exists: true || false,
-            //     Name: 'STRING_VALUE',
-            //     Value: 'STRING_VALUE'
-            //   }
-            };
-            db.putAttributes(params, (err, data) => {
-              if (err) {
-                  console.log(err, err.stack); // an error occurred
-              } else {
-                  console.log(data);  // successful response
-              }
+
+            module.exports.logout(e, ctx, callback, (data) => {
+                callback2(data);
             });
+
+            // console.log('date as number');
+            // console.log(Date.now());
+            // console.log('date as string');
+            // console.log((Date.now()).toString());
+            // params = {
+            //   Attributes: [ /* required */
+            //     {
+            //       Name: 'timestamp', /* required */
+            //       Value: (Date.now()).toString(), /* required */
+            //       Replace: true
+            //     },
+            //     /* more items */
+            //   ],
+            //   DomainName: 'reversi-blacklist', /* required */
+            //   ItemName: decoded.jti, /* required */
+            // //   Expected: {
+            // //     Exists: true || false,
+            // //     Name: 'STRING_VALUE',
+            // //     Value: 'STRING_VALUE'
+            // //   }
+            // };
+            // db.putAttributes(params, (err, data) => {
+            //   if (err) {
+            //       console.log(err, err.stack); // an error occurred
+            //   } else {
+            //       console.log(data);  // successful response
+            //   }
+            // });
         });
-        callback2(accessToken);
+        // callback2(accessToken);
     }
 };
 
@@ -258,5 +263,34 @@ module.exports.publish = function(e, ctx, callback, channel, message, callback2)
     pubnub.publish(publishConfig, function(status, response) {
         console.log(status, response);
         callback2(status, response);
+    });
+};
+
+module.exports.logout = function(e, ctx, callback, decoded, callback2) {
+    var db = new AWS.SimpleDB();
+    params = {
+      Attributes: [ /* required */
+        {
+          Name: 'timestamp', /* required */
+          Value: Date.now().toString(), /* required */
+          Replace: true
+        },
+        /* more items */
+      ],
+      DomainName: 'reversi-blacklist', /* required */
+      ItemName: decoded.jti, /* required */
+    //   Expected: {
+    //     Exists: true || false,
+    //     Name: 'STRING_VALUE',
+    //     Value: 'STRING_VALUE'
+    //   }
+    };
+    db.putAttributes(params, (err, data) => {
+      if (err) {
+          console.log(err, err.stack); // an error occurred
+      } else {
+          console.log(data);  // successful response
+          callback2(data);
+      }
     });
 };
