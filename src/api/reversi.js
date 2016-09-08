@@ -245,6 +245,11 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
               return;
           } else {
               console.log(data);           // successful response
+              if ('Attributes' in data) {
+                  console.log(err);
+                  callback(err);
+                  return;
+              }
               callback2(decoded);
           }
         });
