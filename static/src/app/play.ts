@@ -90,9 +90,10 @@ export class Play implements OnInit {
               return;
           }
 
-          this.reversiService.login(accessToken, (loggedIn) => {
+          this.reversiService.loggedIn(accessToken, (loggedIn) => {
               if (!loggedIn) {
                   window.location.assign('/');
+                  return;
               }
 
               this.pubnub = new PubNub({

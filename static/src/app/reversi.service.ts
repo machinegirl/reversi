@@ -182,7 +182,6 @@ export class ReversiService {
 
 		response.subscribe(
 			message => {
-				this.refreshLogin();
 				callback(message);	// Send back the result
 			},
 			err => console.log(err)
@@ -261,6 +260,7 @@ export class ReversiService {
 
 		response.subscribe(
 			loggedIn => {
+				this.refreshLogin();
 				callback(loggedIn);	// Send back the result
 			},
 			err => console.log(err)
