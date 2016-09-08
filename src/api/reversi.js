@@ -89,8 +89,119 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
     } else {
         accessToken = makeAccessToken(decoded);
 
-        // TODO: Blacklist token
+        var db = new AWS.SimpleDB();
 
+        db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
+
+            if (err) {
+                console.log('Error creating domain');
+                console.log(err);
+                callback2(accessToken);
+                return;
+            }
+
+            // Clean Blacklist
+            var now = Date.now();
+            console.log('now: ' + now);
+            var hourAgo = now - (1000 * 60 * 60);
+            console.log('hour ago: ' + hourAgo);
+            // hourAgo = 0;
+            // console.log('4 minutes ago');
+            // console.log(hourAgo);
+            var params = {
+              SelectExpression: "select * from `reversi-blacklist` where timestamp < '" + hourAgo + "'", /* required */
+            };
+            db.select(params, function(err, data) {
+                if (err) {
+                    console.log('error on first select');
+                    console.log(err, err.stack); // an error occurred
+                } else {
+                    // console.log('Check timestamp here');
+                    console.log('data: ' + JSON.stringify(data));  // successful response
+
+
+                    var deleteItems = (data) => {
+
+                        console.log('delete items data: ' + JSON.stringify(data));
+                        // Delete all items from select operation
+                        // console.log('trying to delete items');
+                        for (var i = 0; i < data.Items.length; i++) {
+                            var item = data.Items[i];
+                            // console.log(item);
+                            // console.log('Check timestamp here');
+                            // console.log(item.Attributes);
+                            var params = {
+                              DomainName: 'reversi-blacklist', /* required */
+                              ItemName: item.Name, /* required */
+                            };
+                            db.deleteAttributes(params, function(err, data) {
+                                if (err) {
+                                    console.log('error on delete');
+                                    console.log(err, err.stack); // an error occurred
+                                } else {
+                                    console.log('successful delete');
+                                    console.log(data);  // successful response
+                                }
+                            });
+                        }
+
+                        // Check for NextToken and call deleteItems if necessary
+                        if ('NextToken' in data) {
+                            console.log('next token detected');
+                            var params = {
+                                SelectExpression: 'select * from `reversi-blacklist` where timestamp < \'' + hourAgo + '\'', /* required */
+                                NextToken: data.NextToken
+                            };
+                            db.select(params, function(err, data) {
+                                if (err) {
+                                    console.log('error on second select');
+                                    console.log(err, err.stack); // an error occurred
+                                } else {
+                                    console.log('success on second select');
+                                    console.log(data);  // successful response
+                                    deleteItems(data);
+                                }
+                            });
+                        }
+
+                    };
+                    if ('Items' in data) {
+                        deleteItems(data);
+                    }
+                }
+            });
+
+            // Blacklist Token
+            console.log('blacklisting token');
+            console.log('date as number');
+            console.log(Date.now());
+            console.log('date as string');
+            console.log((Date.now()).toString());
+            params = {
+              Attributes: [ /* required */
+                {
+                  Name: 'timestamp', /* required */
+                  Value: (Date.now()).toString(), /* required */
+                  Replace: true
+                },
+                /* more items */
+              ],
+              DomainName: 'reversi-blacklist', /* required */
+              ItemName: decoded.jti, /* required */
+            //   Expected: {
+            //     Exists: true || false,
+            //     Name: 'STRING_VALUE',
+            //     Value: 'STRING_VALUE'
+            //   }
+            };
+            db.putAttributes(params, (err, data) => {
+              if (err) {
+                  console.log(err, err.stack); // an error occurred
+              } else {
+                  console.log(data);  // successful response
+              }
+            });
+        });
         callback2(accessToken);
     }
 };
@@ -114,6 +225,21 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         }
 
         // TODO: Check blacklist
+
+        var db = new AWS.SimpleDB();
+
+        // var params = {
+        //   DomainName: 'reversi', /* required */
+        //   ItemName: 'blacklist', /* required */
+        // //   ConsistentRead: true
+        // };
+        // db.getAttributes(params, (err, data) => {
+        //   if (err) {
+        //       console.log(err, err.stack); // an error occurred
+        //   } else {
+        //       console.log(data);           // successful response
+        //   }
+        // });
 
         callback2(decoded);
     });
