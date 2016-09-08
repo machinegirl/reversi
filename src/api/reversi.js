@@ -11,7 +11,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
     var makeAccessToken = (body) => {
         var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
-        var now = Date.now()
+        var now = Date.now();
         var randomBytes = crypto.randomBytes(20);
         const hasher = crypto.createHash('sha256');
         hasher.update(randomBytes + now.toString());

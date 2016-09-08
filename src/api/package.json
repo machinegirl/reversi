@@ -5,6 +5,7 @@
   "main": "handler.js",
   "dependencies": {
     "aws-sdk": "^2.5.5",
+    "base64url": "^2.0.0",
     "crypto": "0.0.3",
     "googleapis": "^12.4.0",
     "jsonwebtoken": "^7.1.9",
