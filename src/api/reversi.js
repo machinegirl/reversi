@@ -228,20 +228,22 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
 
         var db = new AWS.SimpleDB();
 
-        // var params = {
-        //   DomainName: 'reversi', /* required */
-        //   ItemName: 'blacklist', /* required */
-        // //   ConsistentRead: true
-        // };
-        // db.getAttributes(params, (err, data) => {
-        //   if (err) {
-        //       console.log(err, err.stack); // an error occurred
-        //   } else {
-        //       console.log(data);           // successful response
-        //   }
-        // });
+        var params = {
+          DomainName: 'reversi-blacklist', /* required */
+          ItemName: decoded.jti, /* required */
+        //   ConsistentRead: true
+        };
+        db.getAttributes(params, (err, data) => {
+          if (err) {
+              console.log(err, err.stack); // an error occurred
+              callback(err);
+              return;
+          } else {
+              console.log(data);           // successful response
+              callback2(decoded);
+          }
+        });
 
-        callback2(decoded);
     });
 };
 
