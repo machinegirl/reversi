@@ -222,6 +222,8 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         audience: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev',
         issuer: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev'
     }
+    console.log('accessToken');
+    console.log(accessToken);
     var decoded = jwt.verify(accessToken, cert, options, (err, decoded) => {
         if (err !== null) {
             console.log(err);

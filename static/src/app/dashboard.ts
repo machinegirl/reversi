@@ -48,10 +48,16 @@ export class Dashboard implements OnInit {
 	}
 
 	authCallback(googleAuth) {
-		localStorage.removeItem('google_id_token');
-        localStorage.removeItem('reversiAccessToken');
-		googleAuth.signOut();
-		window.location.assign('/');
+        this.reversiService.logout(localStorage.getItem('reversiAccessToken'), (logout) => {
+            if (logout) {
+                localStorage.removeItem('google_id_token');
+                localStorage.removeItem('reversiAccessToken');
+                googleAuth.signOut();
+                window.location.assign('/');
+            } else {
+                console.log('logout failed, likely due to invalid or expired access token');
+            }
+        });
 	}
 
     play(id) {
