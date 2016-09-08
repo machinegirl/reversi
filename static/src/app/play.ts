@@ -125,7 +125,14 @@ export class Play implements OnInit {
                 });
                 let options = new RequestOptions({ headers: headers });
 
-                let response = this.http.get('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/play', options)
+                let playUrl = 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/play';
+                let id = this.reversiService.getParameterByName('id', false);
+
+                if (id != null) {   // If we want to load an ongoing game.
+                    playUrl += '?id=' + id;
+                }
+
+                let response = this.http.get(playUrl, options)
                   .map(function(res: Response) {
                     let body = res.json();
                     return body || { };
