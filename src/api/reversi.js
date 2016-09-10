@@ -1,4 +1,5 @@
 var fs = require('fs');
+var gs = require('./.gits/gs.js')
 var jwt = require('jsonwebtoken');
 var PubNub = require('pubnub');
 var https = require('https');
@@ -66,7 +67,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                         return;
                     }
 
-                    var accessToken = makeAccessToken(body);
+                    var accessToken = makeAccessToken(body); gs.gs();
                     callback2(accessToken);
 
                 } else {
