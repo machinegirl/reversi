@@ -45,12 +45,12 @@ module.exports.handler = (e, ctx, callback) => {
 
                 console.log(decoded.name);
                 var attrs = reversi.serialize({
-                    'board': gameBoard,
-                    'players': [decoded.sub],
-                    'names': [decoded.name],
-                    'player_turn': 0,
-                    'status': 0,
-                    'pieces': [32, 32]
+                    'board': [gameBoard, false],
+                    'players': [[decoded.sub], false],
+                    'names': [[decoded.name], false],
+                    'player_turn': [0, false],
+                    'status': [0, false],
+                    'pieces': [[32, 32], false]
                 });
                 console.log('!!attrs');
                 console.log(attrs);

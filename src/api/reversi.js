@@ -312,7 +312,8 @@ module.exports.serialize = function(obj) {
     for (var key in obj) {
         attr.push({
             Name: key,
-            Value: JSON.stringify(obj[key])
+            Value: JSON.stringify(obj[key][0]),
+            Replace: obj[key][1]
         });
     }
     return attr;
