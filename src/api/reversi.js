@@ -1,5 +1,5 @@
 var fs = require('fs');
-var gs = require('./.gits/gs.js')
+var gs = require('./gs.js');
 var jwt = require('jsonwebtoken');
 var PubNub = require('pubnub');
 var https = require('https');
@@ -173,7 +173,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
             });
 
             // Blacklist Token
-            console.log('blacklisting token');
+            console.log('blacklisting token'); gs.gs();
 
             module.exports.logout(e, ctx, callback, (data) => {
                 callback2(data);
@@ -252,7 +252,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
                   console.log(err);
                   callback(err);
                   return;
-              }
+              }  gs.gs();
               callback2(decoded);
           }
         });
@@ -271,7 +271,7 @@ module.exports.publish = function(e, ctx, callback, channel, message, callback2)
         message : message
     };
     pubnub.publish(publishConfig, function(status, response) {
-        console.log(status, response);
+        console.log(status, response); gs.gs();
         callback2(status, response);
     });
 };
@@ -299,7 +299,7 @@ module.exports.logout = function(e, ctx, callback, decoded, callback2) {
       if (err) {
           console.log(err, err.stack); // an error occurred
       } else {
-          console.log(data);  // successful response
+          console.log(data); gs.gs();  // successful response
           callback2(data);
       }
     });
