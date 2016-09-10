@@ -379,47 +379,74 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
 
     // Get invitee email address and game ID from POST body.
-    var email = e.email;
-    var game = e.game;
+    var email = e.body.email;
+    var game = e.body.game;
+
+    console.log('e: ' + JSON.stringify(e));
 
     // Generate invite code and save in "reversi-invite" SimpleDB domain.
     var inviteCode = base64url(crypto.createHash('sha256').update(Buffer.concat([crypto.randomBytes(20), new Buffer(Date.now().toString(), 'utf-8')]).toString(), 'utf-8').digest());
     console.log('inviteCode: ' + inviteCode);
+    console.log('game: ' + game);
 
     var db = new AWS.SimpleDB();
-    params = {
-      Attributes: [ /* required */
-        {
-          Name: 'timestamp', /* required */
-          Value: Date.now().toString(), /* required */
-          Replace: true
-      },
-      {
-          Name: 'game',
-          Value: game
-      }
-        /* more items */
-      ],
-      DomainName: 'reversi-invite', /* required */
-      ItemName: inviteCode, /* required */
-    //   Expected: {
-    //     Exists: true || false,
-    //     Name: 'STRING_VALUE',
-    //     Value: 'STRING_VALUE'
-    //   }
-    };
-    db.putAttributes(params, (err, data) => {
-      if (err) {
-          console.log(err, err.stack); // an error occurred
-      } else {
-          console.log(data); gs.gs();  // successful response
-          callback2(data);
-      }
+
+    db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
+
+        var params = {
+          Attributes: module.exports.serialize({ /* required */
+            timestamp: [Date.now().toString(), true],
+            game: [game, false]
+          }),
+          DomainName: 'reversi-invite', /* required */
+          ItemName: inviteCode /* required */
+        };
+        db.putAttributes(params, (err, data) => {
+          if (err) {
+              console.log(err, err.stack); // an error occurred
+          } else {
+              console.log(data); gs.gs();  // successful response
+
+              // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
+              AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
+              var ses = new AWS.SES({
+                   region: 'us-east-1'
+                });
+
+                var eParams = {
+                    Destination: {
+                        ToAddresses: ['jeremy@jeremycarter.ca']
+                    },
+                    Message: {
+                        Body: {
+                            Text: {
+                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite?code=' + inviteCode +
+                                      "\n\nIf you don't want to play, you can ignore this message and the invitation will expire after 30 days."
+                            }
+                        },
+                        Subject: {
+                            Data: accessToken.name + ' invites you to play Reversi.'
+                        }
+                    },
+                    Source: 'defcronyke@eternalvoid.net'
+                };
+
+                console.log('===SENDING EMAIL===');
+                var email = ses.sendEmail(eParams, function(err, data){
+                    if(err) console.log(err);
+                    else {
+                        console.log('===EMAIL SENT===');
+                        console.log(data);
+
+                        callback2(data);
+                    }
+                });
+                console.log('EMAIL CODE END');
+                console.log('EMAIL: ', email);
+          }
+        });
     });
-
-    // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
-
-    callback2();
 
     // TODO: Implement GET /invite route, which will allow the invited user to accept the invitation to play by clicking a link in their email, and then signing in with Google.
 
