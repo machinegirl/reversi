@@ -368,8 +368,6 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                    region: 'us-east-1'
                 });
 
-                console.log('!!! ' + emailAddress)
-
                 var eParams = {
                     Destination: {
                         ToAddresses: [emailAddress]
