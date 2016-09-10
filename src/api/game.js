@@ -56,6 +56,10 @@ module.exports.handler = (e, ctx, callback) => {
                             Value: JSON.stringify([decoded.sub])
                         },
                         {
+                            Name: 'names',
+                            Value: JSON.stringify([decoded.Name])
+                        },
+                        {
                             Name: 'player_turn',
                             Value: '0'
                         },
