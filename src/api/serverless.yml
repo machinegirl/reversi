@@ -68,11 +68,11 @@ functions:
                         - X-Api-Key
                         - X-Amz-Security-Token
 
-    play:
-        handler: play.handler
+    game:
+        handler: game.handler
         events:
             - http:
-                path: play
+                path: game
                 method: get
                 private: true
                 cors:
