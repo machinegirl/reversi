@@ -125,15 +125,7 @@ module.exports.handler = (e, ctx, callback) => {
                         callback(null, {id: id, game: game});
                     });
                 })
-
-
             }
-
-
-
-            // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
-            // TODO: Implement /accept route, which will allow the invited user to accept the invitation to play.
-
         });
     });
 };

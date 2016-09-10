@@ -330,4 +330,21 @@ module.exports.unserialGame = function(attr) {
     }
 
     return game;
+};
+
+module.exports.sendInvite = function(e, ctx, callback, accessToken, callback2) {
+
+    // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
+
+    // Get invitee email address from POST body.
+
+    // Generate invite code and save in "reversi-invite" SimpleDB domain.
+
+    // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
+
+    callback2();
+
+    // TODO: Implement GET /invite route, which will allow the invited user to accept the invitation to play by clicking a link in their email, and then signing in with Google.
+
+    // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 }

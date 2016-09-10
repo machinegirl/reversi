@@ -122,6 +122,23 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
+    invite:
+        handler: invite.handler
+        events:
+            - http:
+                path: invite
+                method: post
+                private: true
+                cors:
+                    origins:
+                        - '*'
+                    headers:
+                        - Content-Type
+                        - X-Amz-Date
+                        - Authorization
+                        - X-Api-Key
+                        - X-Amz-Security-Token
+                        - X-Reversi-Auth
 
 #     - s3: ${bucket}
 #     - schedule: rate(10 minutes)
