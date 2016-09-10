@@ -312,7 +312,7 @@ module.exports.serialize = function(obj) {
         attr.push({
             Name: key,
             Value: JSON.stringify(obj[key])
-        })
+        });
     }
     return attr;
 };
