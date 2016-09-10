@@ -172,9 +172,11 @@ export class Play implements OnInit {
           let inviteUrl = 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite';
 
           console.log(this.opponentEmail);
+          console.log(this.reversiService.getParameterByName('game', false));
 
           let body = JSON.stringify({
-              email: this.opponentEmail
+              email: this.opponentEmail,
+              game: this.reversiService.getParameterByName('game', false)
           });
           let headers = new Headers({
               'Content-Type': 'application/json',
