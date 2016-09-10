@@ -1,5 +1,6 @@
 import { Component, OnInit} from '@angular/core';
 import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import {Location} from '@angular/common';
 // import {WebsocketService} from './websocket.service';
 import {ReversiService} from './reversi.service';
 import {Header} from './header';
@@ -11,7 +12,7 @@ declare var PubNub: any;
 @Component({
   selector: 'Play',
   template: require('./play.html'),
-  providers: [],
+  providers: [Location],
   directives: [Header, Player]
 })
 export class Play implements OnInit {
@@ -20,8 +21,9 @@ export class Play implements OnInit {
   pubnub2: any;
   subscribedPubnubSystem: boolean;
   subscribedPubnubSystem2: boolean;
+  opponentEmail: string;
 
-  constructor(private reversiService: ReversiService, private http: Http) {
+  constructor(private reversiService: ReversiService, private http: Http, private location: Location) {
 	  this.reversiService = reversiService;
 	//   reversiService.gameBoard = gameBoard;
 	  console.log('play controller started');
@@ -120,16 +122,16 @@ export class Play implements OnInit {
                 });
 
                 let headers = new Headers({
-                    'X-Api-Key': '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL',
+                    'X-Api-Key': this.reversiService.xApiKey,
                     'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
                 });
                 let options = new RequestOptions({ headers: headers });
 
-                let playUrl = 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/game';
-                let id = this.reversiService.getParameterByName('id', false);
+                let playUrl = 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/game';
+                let id = this.reversiService.getParameterByName('game', false);
 
                 if (id != null) {   // If we want to load an ongoing game.
-                    playUrl += '?id=' + id;
+                    playUrl += '?game=' + id;
                 }
 
                 let response = this.http.get(playUrl, options)
@@ -148,14 +150,61 @@ export class Play implements OnInit {
                 response.subscribe(
                   message => {
                       console.log(message);
-                      let id = window.location.search;
-                       let idLength: number = id.length;
-                       id = id.substring(4, idLength);
+                    //   let id = window.location.search;
+
+                      if (id == null) {
+                          id = message.id;
+                          this.location.replaceState('/play', 'game='+id);
+                      } else {
+                        //   let idLength: number = id.length;
+                        //   id = id.substring(4, idLength);
+                      }
+
                       this.reversiService.loadGame(id);
                   },
                   err => console.log(err)
                 );
 
           });
+      }
+
+      invite() {
+          let inviteUrl = 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite';
+
+          console.log(this.opponentEmail);
+
+          let body = JSON.stringify({
+              email: this.opponentEmail
+          });
+          let headers = new Headers({
+              'Content-Type': 'application/json',
+              'X-Api-Key': this.reversiService.xApiKey,
+              'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
+          });
+          let options = new RequestOptions({ headers: headers });
+
+          let response = this.http.post(inviteUrl, body, options)
+            .map(function(res: Response) {
+              let body = res.json();
+              return body || { };
+            })
+            .catch(function(error: any) {
+              let errMsg = (error.message) ? error.message :
+              error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+              console.log('!!error!!');
+              console.log(errMsg); // log to console instead
+              return Observable.throw(errMsg);
+            });
+
+          response.subscribe(
+            message => {
+                console.log(message);
+                let id = window.location.search;
+                 let idLength: number = id.length;
+                 id = id.substring(4, idLength);
+                this.reversiService.loadGame(id);
+            },
+            err => console.log(err)
+          );
       }
 }

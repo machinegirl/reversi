@@ -18,6 +18,7 @@ provider:
     runtime: nodejs4.3
     apiKeys:
         - reversi-dev
+    timeout: 300
 
 # you can overwrite defaults here
 #defaults:
@@ -122,8 +123,8 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
-    invite:
-        handler: invite.handler
+    sendInvite:
+        handler: invite.send_invite
         events:
             - http:
                 path: invite

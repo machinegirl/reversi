@@ -4,6 +4,7 @@ var jwt = require('jsonwebtoken');
 var PubNub = require('pubnub');
 var https = require('https');
 var crypto = require('crypto');
+var base64url = require('base64url');
 var AWS = require('aws-sdk');
 
 module.exports.login = function(e, ctx, callback, decoded, callback2) {
@@ -21,9 +22,9 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
         var options = {
             algorithm: 'RS256',
-            issuer: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev',
+            issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
             subject: body.sub,
-            audience: [body.sub, 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev', 'https://reversi-2016.appspot.com'],
+            audience: [body.sub, 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev', 'https://reversi-2016.appspot.com'],
             expiresIn: '1h',
             notBefore: 0,
             jwtid: jti
@@ -220,8 +221,8 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
     var options = {
         algorithms: ['RS256'],
-        audience: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev',
-        issuer: 'https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev'
+        audience: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
+        issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev'
     }
     console.log('accessToken');
     console.log(accessToken);
@@ -326,13 +327,48 @@ module.exports.unserial = function(attr) {
     return obj;
 };
 
-module.exports.sendInvite = function(e, ctx, callback, accessToken, callback2) {
+module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) {
 
     // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
 
-    // Get invitee email address from POST body.
+    // Get invitee email address and game ID from POST body.
+    var email = e.email;
+    var game = e.game;
 
     // Generate invite code and save in "reversi-invite" SimpleDB domain.
+    var inviteCode = base64url(crypto.createHash('sha256').update(Buffer.concat([crypto.randomBytes(20), new Buffer(Date.now().toString(), 'utf-8')]).toString(), 'utf-8').digest());
+    console.log('inviteCode: ' + inviteCode);
+
+    var db = new AWS.SimpleDB();
+    params = {
+      Attributes: [ /* required */
+        {
+          Name: 'timestamp', /* required */
+          Value: Date.now().toString(), /* required */
+          Replace: true
+      },
+      {
+          Name: 'game',
+          Value: game
+      }
+        /* more items */
+      ],
+      DomainName: 'reversi-invite', /* required */
+      ItemName: inviteCode, /* required */
+    //   Expected: {
+    //     Exists: true || false,
+    //     Name: 'STRING_VALUE',
+    //     Value: 'STRING_VALUE'
+    //   }
+    };
+    db.putAttributes(params, (err, data) => {
+      if (err) {
+          console.log(err, err.stack); // an error occurred
+      } else {
+          console.log(data); gs.gs();  // successful response
+          callback2(data);
+      }
+    });
 
     // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
 

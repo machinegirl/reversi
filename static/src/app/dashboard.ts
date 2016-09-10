@@ -2,6 +2,8 @@ import { Component, OnInit, Input} 	from '@angular/core';
 import {Header} from './header';
 import {Player} from './player';
 import {ReversiService} from './reversi.service';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'Dashboard',
@@ -13,7 +15,8 @@ export class Dashboard implements OnInit {
 
 	@Input() public dashboard: Dashboard;
 
-	constructor(private reversiService: ReversiService) {
+	constructor(private reversiService: ReversiService, private http: Http) {
+
 	}
 
 	ngOnInit() {
@@ -67,5 +70,4 @@ export class Dashboard implements OnInit {
         }
         window.location.assign(url);
     }
-
 }

@@ -17,7 +17,7 @@ export class ReversiService {
 
 
 	constructor(public http: Http) {
-		this.xApiKey = '4YLYr2DUqbadbhVWM4yjN4OEHsFaNGNC8UdUKqvL';	// NOTE: AWS API Gateway auth key
+		this.xApiKey = 'ALcc4qFoMN4ToFkFj2qQQ4jBaivu7iWS4kCLwQ7d';	// NOTE: AWS API Gateway auth key
 	}
 
 	init() {
@@ -177,7 +177,7 @@ export class ReversiService {
 		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.post('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/login', body, options)
+		let response = this.http.post('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/login', body, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };
@@ -216,7 +216,7 @@ export class ReversiService {
 			});
 			let options = new RequestOptions({ headers: headers });
 
-			let response = this.http.put('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
+			let response = this.http.put('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
 			.map(function(res: Response) {
 			  let body = res.json();
 			  return body || { };
@@ -255,7 +255,7 @@ export class ReversiService {
 		});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.get('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/logged_in', options)
+		let response = this.http.get('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/logged_in', options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };
@@ -284,7 +284,7 @@ export class ReversiService {
 		});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.put('https://bi5371ceb2.execute-api.us-east-1.amazonaws.com/dev/logout', null, options)
+		let response = this.http.put('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/logout', null, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };

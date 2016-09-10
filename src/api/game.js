@@ -31,7 +31,7 @@ module.exports.handler = (e, ctx, callback) => {
 
                 // Generate a unique game id, and use it as an Item name in a put request to SimpleDB.
                 var id = base64url(crypto.createHash('sha256').update(Buffer.concat([crypto.randomBytes(20), new Buffer(Date.now().toString(), 'utf-8')]).toString(), 'utf-8').digest());
-                console.log('id: ' + id);
+                console.log('game: ' + id);
 
                 // Put a new Item into SimpleDB, with the correct attributes for a new game.
             	var gameBoard = [];
@@ -69,7 +69,7 @@ module.exports.handler = (e, ctx, callback) => {
                     } else {
                         // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
 
-                        callback(null, {'id': id});
+                        callback(null, {id: id});
                         return;
                     }
                 });
@@ -77,7 +77,7 @@ module.exports.handler = (e, ctx, callback) => {
 
             } else {    // If we want to load an ongoing game.
 
-                var id = e.query.id;
+                var id = e.query.game;
                 console.log('loading game: ' + id);
 
                 // Try to get an Item from the SimpleDB game domain, whose Name is id. Do this with a direct key lookup, rather than performing a query.
