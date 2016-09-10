@@ -304,23 +304,24 @@ module.exports.logout = function(e, ctx, callback, decoded, callback2) {
     });
 };
 
+module.exports.serialize = function(obj) {
+    var attr = [];
+
+    for (var key in obj) {
+        attr.push({
+            Name: key,
+            Value: JSON.stringify(obj[key])
+        })
+    }
+    return attr;
+};
+
 module.exports.unserial = function(attr) {
     var obj = {};
 
     for (var i = 0; i < attr.length; i++) {
-        var name = attr[i].Name;
-        switch(name) {
-            case 'board'|| 'players' || 'pieces' || 'names' :
-                obj[name] = JSON.parse(attr[i].Value);
-                break;
-            case 'player_turn' || 'status' || 'pieces' :
-                obj[name] = parseInt(attr[i].Value, 10);
-                break;
-            default:
-                break;
-        }
+        obj[attr[i].Name] = JSON.parse(attr[i].Value);
     }
-
     return obj;
 };
 

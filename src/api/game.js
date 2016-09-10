@@ -43,35 +43,22 @@ module.exports.handler = (e, ctx, callback) => {
         			gameBoard.push(row);
         		}
 
+                console.log(decoded.name);
+                var attrs = reversi.serialize({
+                    'board': gameBoard,
+                    'players': [decoded.sub],
+                    'names': [decoded.name],
+                    'player_turn': 0,
+                    'status': 0,
+                    'pieces': [32, 32]
+                });
+                console.log('!!attrs');
+                console.log(attrs);
+
                 var params = {
                     DomainName: 'reversi-game',
                     ItemName: id,
-                    Attributes: [
-                        {
-                            Name: 'board',
-                            Value: JSON.stringify(gameBoard)
-                        },
-                        {
-                            Name: 'players',
-                            Value: JSON.stringify([decoded.sub])
-                        },
-                        {
-                            Name: 'names',
-                            Value: JSON.stringify([decoded.Name])
-                        },
-                        {
-                            Name: 'player_turn',
-                            Value: '0'
-                        },
-                        {
-                            Name: 'status',
-                            Value: '0'
-                        },
-                        {
-                            Name: 'pieces',
-                            Value: JSON.stringify([32,32])
-                        }
-                    ]
+                    Attributes: attrs
                 };
 
                 db.putAttributes(params, (err, data) => {
@@ -111,6 +98,7 @@ module.exports.handler = (e, ctx, callback) => {
                     console.log(data);
 
                     var game = reversi.unserial(data.Attributes);
+                    console.log(game);
                     // If user sub claim is not found in players array, return an error and return from this function.
                     var validPlayer = false;
                     for (i = 0; i < game.players.length; i++) {
