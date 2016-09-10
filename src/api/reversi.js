@@ -303,3 +303,31 @@ module.exports.logout = function(e, ctx, callback, decoded, callback2) {
       }
     });
 };
+
+module.exports.unserialGame = function(attr) {
+    var game = {};
+
+    for (var i = 0; i < attr.length; i++) {
+        switch(attr[i].Name) {
+            case 'board':
+                game.board = JSON.parse(attr[i].Value);
+                break;
+            case 'players':
+                game.players = JSON.parse(attr[i].Value);
+                break;
+            case 'player_turn':
+                game['player_turn'] = attr[i].Value;
+                break;
+            case 'status':
+                game.status = attr[i].Value;
+                break;
+            case 'pieces':
+                game.pieces = JSON.parse(attr[i].Value);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return game;
+}
