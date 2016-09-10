@@ -44,6 +44,8 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         return accessToken
     };
 
+    var db = new AWS.SimpleDB();
+
     if (decoded === null || typeof decoded === 'undefined') {
         var idToken = e.idToken;
         var body = [];
@@ -67,9 +69,55 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                         });
                         return;
                     }
+                    //check if user is in db and enter if not
+                    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
-                    var accessToken = makeAccessToken(body); gs.gs();
-                    callback2(accessToken);
+                        if (err) {
+                            console.log(err);
+                            callback(err);
+                            return;
+                        }
+
+                        db.getAttributes({
+                            DomainName: 'reversi-user',
+                            ItemName: decoded.sub
+                        }, (data, err) => {
+
+                            if (err) {
+                                console.log(err);
+                                callback(err);
+                                return;
+                            }
+
+                            if ('Attributes' in data) {
+                                var accessToken = makeAccessToken(body); gs.gs();
+                                callback2(accessToken);
+                                return;
+                            }
+
+                            db.putAttributes({
+                                DomainName: 'reversi-user',
+                                ItemName: decoded.sub,
+                                Attributes: module.exports.serialize({
+                                    games: [[], false],
+                                    new: [true, false],
+                                    games_played: [0, false],
+                                    games_won: [0, false],
+                                    friends: []
+                                })
+                            }, (err, data) => {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err);
+                                    return;
+                                }
+                                var accessToken = makeAccessToken(body); gs.gs();
+                                callback2(accessToken);
+                            });
+                        });
+                    });
+
+
 
                 } else {
                     callback(null, {
@@ -90,8 +138,6 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         });
     } else {
         accessToken = makeAccessToken(decoded);
-
-        var db = new AWS.SimpleDB();
 
         db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
 
