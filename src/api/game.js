@@ -56,6 +56,10 @@ module.exports.handler = (e, ctx, callback) => {
                             Value: JSON.stringify([decoded.sub])
                         },
                         {
+                            Name: 'names',
+                            Value: JSON.stringify([decoded.Name])
+                        },
+                        {
                             Name: 'player_turn',
                             Value: '0'
                         },
@@ -106,7 +110,7 @@ module.exports.handler = (e, ctx, callback) => {
                     console.log('!!data!!');
                     console.log(data);
 
-                    var game = reversi.unserialGame(data.Attributes);
+                    var game = reversi.unserial(data.Attributes);
                     // If user sub claim is not found in players array, return an error and return from this function.
                     var validPlayer = false;
                     for (i = 0; i < game.players.length; i++) {
