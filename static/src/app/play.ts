@@ -116,11 +116,6 @@ export class Play implements OnInit {
                   }).bind(this)
               });
 
-                console.log('Subscribing..');
-                this.pubnub.subscribe({
-                    channels: ['game-xxxzzz']
-                });
-
                 let headers = new Headers({
                     'X-Api-Key': this.reversiService.xApiKey,
                     'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
@@ -160,7 +155,12 @@ export class Play implements OnInit {
                         //   id = id.substring(4, idLength);
                       }
 
-                      this.reversiService.loadGame(id);
+                      console.log('Subscribing to PubNub channel: game-' + id);
+                      this.pubnub.subscribe({
+                          channels: ['game-'+id]
+                      });
+
+                      this.reversiService.loadGame(id);     // TODO: This currently does nothing.
                   },
                   err => console.log(err)
                 );
