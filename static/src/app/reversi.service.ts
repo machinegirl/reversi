@@ -23,7 +23,7 @@ export class ReversiService {
 
 	}
 
-	init() {
+	init(callback: any) {
 		console.log('reversi service started');
 
 
@@ -54,6 +54,8 @@ export class ReversiService {
 							// console.log('c: ' + c);
 						}
 					}
+
+					callback();
 				});
 			});
 		});

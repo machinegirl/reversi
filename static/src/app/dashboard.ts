@@ -21,19 +21,21 @@ export class Dashboard implements OnInit {
 
 	ngOnInit() {
 
-        let accessToken = localStorage.getItem('reversiAccessToken');
-        if (typeof accessToken === 'undefined' || accessToken === null) {
-            // window.location.assign('/');
-            console.log(accessToken);
-            return;
-        }
-
-        this.reversiService.loggedIn(accessToken, (loggedIn) => {
-            if (loggedIn !== true) {
-                // console.log(loggedIn);
-                window.location.assign('./');
+        this.reversiService.init(() => {
+            let accessToken = localStorage.getItem('reversiAccessToken');
+            if (typeof accessToken === 'undefined' || accessToken === null) {
+                // window.location.assign('/');
+                console.log(accessToken);
                 return;
-            };
+            }
+
+            this.reversiService.loggedIn(accessToken, (loggedIn) => {
+                if (loggedIn !== true) {
+                    // console.log(loggedIn);
+                    window.location.assign('./');
+                    return;
+                };
+            });
         });
 	}
 

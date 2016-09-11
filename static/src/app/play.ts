@@ -30,7 +30,9 @@ export class Play implements OnInit {
   }
 
   ngOnInit() {
-      this.play();
+      this.reversiService.init(() => {
+          this.play();
+      });
   }
 
   move(e) {

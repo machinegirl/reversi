@@ -17,7 +17,6 @@ export class Header implements OnInit {
 	}
 
 	ngOnInit() {
-		this.reversiService.init();
         // window.setInterval((function() {
         //     let accessToken = localStorage.getItem('reversiAccessToken');
         //     if (typeof accessToken === 'undefined' || accessToken === null) {
@@ -56,7 +55,7 @@ export class Header implements OnInit {
 
 
         // window.setInterval((function() {
-        
+
         // }).bind(this), 1000 * 30);
 
 	}
