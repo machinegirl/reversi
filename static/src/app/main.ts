@@ -31,6 +31,9 @@ export class Main implements OnInit {
                     localStorage.setItem('reversiAccessToken', message.accessToken);
                     window.location.assign('/dashboard');
                 }
+                else {
+                    console.log(message);
+                }
             });
 
             // // Send idToken to login route on backend
