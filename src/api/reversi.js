@@ -44,6 +44,8 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         return accessToken
     };
 
+    var db = new AWS.SimpleDB();
+
     if (decoded === null || typeof decoded === 'undefined') {
         var idToken = e.idToken;
         var body = [];
@@ -67,9 +69,60 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                         });
                         return;
                     }
+                    //check if user is in db and enter if not
+                    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
-                    var accessToken = makeAccessToken(body); gs.gs();
-                    callback2(accessToken);
+                        if (err) {
+                            console.log('error creating domain');
+                            console.log(err, err.stack);
+                            callback(err);
+                            return;
+                        }
+
+                        db.getAttributes({
+                            DomainName: 'reversi-user',
+                            ItemName: body.sub
+                        }, (err, data) => {
+
+                            if (err) {
+                                console.log('error getting attributes');
+                                console.log(JSON.stringify(err));
+                                callback(JSON.stringify(err));
+                                return;
+                            }
+
+                            if ('Attributes' in data) {
+                                console.log('found user');
+                                console.log(data.Attributes);
+                                callback2(makeAccessToken(body));
+                                return;
+                            }
+
+                            db.putAttributes({
+                                DomainName: 'reversi-user',
+                                ItemName: body.sub,
+                                Attributes: module.exports.serialize({
+                                    name: [body.name, false],
+                                    games: [[], false],
+                                    new: [true, false],
+                                    games_played: [0, false],
+                                    games_won: [0, false],
+                                    friends: [[], false]
+                                })
+                            }, (err, data) => {
+                                if (err) {
+                                    console.log('error creating user');
+                                    console.log(err, err.stack);
+                                    callback(err);
+                                    return;
+                                }
+                                var accessToken = makeAccessToken(body); //gs.gs();
+                                callback2(accessToken);
+                            });
+                        });
+                    });
+
+
 
                 } else {
                     callback(null, {
@@ -90,8 +143,6 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         });
     } else {
         accessToken = makeAccessToken(decoded);
-
-        var db = new AWS.SimpleDB();
 
         db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
 
@@ -174,7 +225,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
             });
 
             // Blacklist Token
-            console.log('blacklisting token'); gs.gs();
+            console.log('blacklisting token'); //gs.gs();
 
             module.exports.logout(e, ctx, callback, (data) => {
                 callback2(data);
@@ -253,7 +304,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
                   console.log(err);
                   callback(err);
                   return;
-              }  gs.gs();
+              }  //gs.gs();
               callback2(decoded);
           }
         });
@@ -405,4 +456,27 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement GET /invite route, which will allow the invited user to accept the invitation to play by clicking a link in their email, and then signing in with Google.
 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
+}
+
+module.exports.deleteUser = function(e, ctx, callback, decoded, callback2) {
+    var db = new AWS.SimpleDB();
+
+    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
+        if (err) {
+            console.log(JSON.stringify(err));
+            callback(JSON.stringify(err));
+            return;
+        }
+
+        db.deleteAttributes({
+            DomainName: 'reversi-user',
+            ItemName: decoded.sub,
+        }, (err, data) => {
+            if (err) {
+                console.log(JSON.stringify(err));
+                callback(JSON.stringify(err));
+            }
+            callback2();
+        });
+    });
 }

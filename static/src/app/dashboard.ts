@@ -47,10 +47,10 @@ export class Dashboard implements OnInit {
 			client_id: this.reversiService.googleIdentityPlatformKey,   // NOTE: Google Identity Platform key here
 			scopes: 'profile'
 		});
-		(<any>window).gapi.auth2.getAuthInstance().then(this.authCallback.bind(this));
+		(<any>window).gapi.auth2.getAuthInstance().then(this.googleLogout.bind(this));
 	}
 
-	authCallback(googleAuth) {
+	googleLogout(googleAuth) {
         this.reversiService.logout(localStorage.getItem('reversiAccessToken'), (logout) => {
             if (logout) {
                 localStorage.removeItem('google_id_token');
@@ -70,4 +70,12 @@ export class Dashboard implements OnInit {
         }
         window.location.assign(url);
     }
+
+    deleteUserTrigger() {
+        let accessToken = localStorage.getItem('reversiAccessToken');
+        this.reversiService.deleteUser(accessToken, () => {
+            this.signOut();
+        })
+    }
+
 }

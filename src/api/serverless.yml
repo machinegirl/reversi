@@ -141,6 +141,25 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
+    deleteUser:
+        handler: user.delete
+        events:
+            - http:
+                path: user
+                method: delete
+                private: true
+                cors:
+                    origins:
+                        - '*'
+                    headers:
+                        - Content-Type
+                        - X-Amz-Date
+                        - Authorization
+                        - X-Api-Key
+                        - X-Amz-Security-Token
+                        - X-Reversi-Auth
+
+
 #     - s3: ${bucket}
 #     - schedule: rate(10 minutes)
 #     - sns: greeter-topic
