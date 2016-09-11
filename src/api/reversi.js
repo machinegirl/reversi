@@ -384,7 +384,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
 
     // Get invitee email address and game ID from POST body.
-    var email = e.body.email;
+    var emailAddress = e.body.email;
     var game = e.body.game;
 
     console.log('e: ' + JSON.stringify(e));
@@ -421,7 +421,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
 
                 var eParams = {
                     Destination: {
-                        ToAddresses: ['jeremy@jeremycarter.ca']
+                        ToAddresses: [emailAddress]
                     },
                     Message: {
                         Body: {
