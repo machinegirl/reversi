@@ -13,40 +13,142 @@ export class ReversiService {
 	public numPieces0: number;
 	public numPieces1: number;
 	jwtHelper: JwtHelper = new JwtHelper();
-	xApiKey: string;
-
+	xApiKey: string;					// NOTE: The following 3 vars are loaded from /assets/conf/api.conf
+	apiPrefix: string;
+	apiStage: string;
+	pubnubSubscribeKey: string;			// NOTE: This is loaded from /assets/conf/pubnub.conf
+	googleIdentityPlatformKey: string;	// NOTE: This is loaded from /assets/conf/googleIdentityPlatform.key
 
 	constructor(public http: Http) {
-		this.xApiKey = 'ALcc4qFoMN4ToFkFj2qQQ4jBaivu7iWS4kCLwQ7d';	// NOTE: AWS API Gateway auth key
+
 	}
 
 	init() {
 		console.log('reversi service started');
 
-		// this.gameBoard = [
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0],
-		// 	[0, 0, 0, 0, 0, 0, 0, 0]
-		// ];
 
-		if (window.location.pathname === '/play') {
-			let c = <HTMLCanvasElement> document.getElementById('gameBoard');
-			if (typeof c !== 'undefined') {
-				let ctx = <CanvasRenderingContext2D> c.getContext('2d');
-				// console.log(ctx);
-				ctx.fillStyle = '#0f8f2f';
-				ctx.fillRect(0, 0, 400, 400);
+		this.loadApiConf(() => {			// Load api.conf
+			this.loadPubnubConf(() => {		// Load pubnub.conf
+				this.loadGoogleIdentityPlatformKey(() => {
+					// this.gameBoard = [
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0],
+					// 	[0, 0, 0, 0, 0, 0, 0, 0]
+					// ];
 
-				// this.drawGameBoard(gameBoard);
-			} else {
-				// console.log('c: ' + c);
-			}
-		}
+					if (window.location.pathname === '/play') {
+						let c = <HTMLCanvasElement> document.getElementById('gameBoard');
+						if (typeof c !== 'undefined') {
+							let ctx = <CanvasRenderingContext2D> c.getContext('2d');
+							// console.log(ctx);
+							ctx.fillStyle = '#0f8f2f';
+							ctx.fillRect(0, 0, 400, 400);
+
+							// this.drawGameBoard(gameBoard);
+						} else {
+							// console.log('c: ' + c);
+						}
+					}
+				});
+			});
+		});
+	}
+
+	loadApiConf(callback: any) {
+		let confPath = '/assets/conf/api.conf';
+
+		let headers = new Headers({
+			'Content-Type': 'application/json'
+		});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.get(confPath, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg);
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			body => {
+				this.xApiKey = body.x_api_key;
+				this.apiPrefix = body.api_prefix;
+				this.apiStage = body.api_stage;
+				callback();
+			},
+			err => console.log(err)
+		);
+	}
+
+	loadPubnubConf(callback: any) {
+		let confPath = '/assets/conf/pubnub.conf';
+
+		let headers = new Headers({
+			'Content-Type': 'application/json'
+		});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.get(confPath, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg);
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			body => {
+				this.pubnubSubscribeKey = body.subscribe_key;
+				callback();
+			},
+			err => console.log(err)
+		);
+	}
+
+	loadGoogleIdentityPlatformKey(callback: any) {
+		let confPath = '/assets/conf/googleIdentityPlatform.key';
+
+		let headers = new Headers({
+			'Content-Type': 'application/json'
+		});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.get(confPath, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg);
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			body => {
+				this.pubnubSubscribeKey = body;
+				callback();
+			},
+			err => console.log(err)
+		);
 	}
 
 	getParameterByName(name, url) {
@@ -111,14 +213,7 @@ export class ReversiService {
 	// }
 
 	loadGame(id) {
-		let idToken = localStorage.getItem('google_id_token');
-
-		// this.sockHandle.send(JSON.stringify({
-		// 	'cmd': 'load_game',
-		// 	'id_token': idToken,
-		// 	'id': id
-		// }));
-
+		// TODO: Do we need this?
 	}
 
 	setupGame(game) {
@@ -173,11 +268,14 @@ export class ReversiService {
 	}
 
 	login(idToken, callback) {
+
+		let endpoint = '/login';
+
 		let body = JSON.stringify({ 'idToken': idToken });
 		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.post('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/login', body, options)
+		let response = this.http.post(this.apiPrefix + this.apiStage + endpoint, body, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };
@@ -199,6 +297,9 @@ export class ReversiService {
 	}
 
 	refreshLogin() {
+
+		let endpoint = '/refresh_login';
+
 		let accessToken = localStorage.getItem('reversiAccessToken');
 		if (typeof accessToken === 'undefined' || accessToken === null) {
 			window.location.assign('/');
@@ -216,7 +317,7 @@ export class ReversiService {
 			});
 			let options = new RequestOptions({ headers: headers });
 
-			let response = this.http.put('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/refresh_login', null, options)
+			let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, null, options)
 			.map(function(res: Response) {
 			  let body = res.json();
 			  return body || { };
@@ -249,13 +350,16 @@ export class ReversiService {
 	};
 
 	loggedIn(accessToken, callback) {
+
+		let endpoint = '/logged_in';
+
 		let headers = new Headers({
 			'X-Api-Key': this.xApiKey,
 			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.get('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/logged_in', options)
+		let response = this.http.get(this.apiPrefix + this.apiStage + endpoint, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };
@@ -278,13 +382,16 @@ export class ReversiService {
 	}
 
 	logout(accessToken, callback) {
+
+		let endpoint = '/logout';
+
 		let headers = new Headers({
 			'X-Api-Key': this.xApiKey,
 			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.put('https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/logout', null, options)
+		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, null, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };

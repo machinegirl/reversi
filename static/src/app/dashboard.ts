@@ -44,7 +44,7 @@ export class Dashboard implements OnInit {
 
 	authInit() {
 		(<any>window).gapi.auth2.init({
-			client_id: '402658185741-ai8prq9pem5vloivipl8o99ul5uuafvm.apps.googleusercontent.com',   // NOTE: Google Identity Platform key here
+			client_id: this.reversiService.googleIdentityPlatformKey,   // NOTE: Google Identity Platform key here
 			scopes: 'profile'
 		});
 		(<any>window).gapi.auth2.getAuthInstance().then(this.authCallback.bind(this));

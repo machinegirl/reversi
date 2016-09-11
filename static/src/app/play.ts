@@ -99,7 +99,7 @@ export class Play implements OnInit {
               }
 
               this.pubnub = new PubNub({
-                  subscribeKey : 'sub-c-ee9c502c-6e51-11e6-92a0-02ee2ddab7fe'
+                  subscribeKey: this.reversiService.pubnubSubscribeKey
               });
 
               this.pubnub.addListener({
@@ -116,13 +116,15 @@ export class Play implements OnInit {
                   }).bind(this)
               });
 
+                let endpoint = '/game';
+
                 let headers = new Headers({
                     'X-Api-Key': this.reversiService.xApiKey,
                     'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
                 });
                 let options = new RequestOptions({ headers: headers });
 
-                let playUrl = 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/game';
+                let playUrl = this.reversiService.apiPrefix + this.reversiService.apiStage + endpoint;
                 let id = this.reversiService.getParameterByName('game', false);
 
                 if (id != null) {   // If we want to load an ongoing game.
@@ -169,7 +171,10 @@ export class Play implements OnInit {
       }
 
       invite() {
-          let inviteUrl = 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite';
+
+          let endpoint = '/invite';
+
+          let inviteUrl = this.reversiService.apiPrefix + this.reversiService.apiStage + endpoint;
 
           console.log(this.opponentEmail);
           console.log(this.reversiService.getParameterByName('game', false));
