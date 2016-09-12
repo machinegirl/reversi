@@ -103,6 +103,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                                 ItemName: body.sub,
                                 Attributes: module.exports.serialize({
                                     name: [body.name, false],
+                                    email: [body.email, false],
                                     games: [[], false],
                                     new: [true, false],
                                     games_played: [0, false],
