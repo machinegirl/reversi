@@ -9,6 +9,8 @@ var AWS = require('aws-sdk');
 
 module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+    var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
     var makeAccessToken = (body) => {
@@ -22,9 +24,9 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
         var options = {
             algorithm: 'RS256',
-            issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
+            issuer: apiConf.api_prefix + apiConf.api_stage,
             subject: body.sub,
-            audience: [body.sub, 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev', 'https://reversi-2016.appspot.com'],
+            audience: [body.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
             expiresIn: '1h',
             notBefore: 0,
             jwtid: jti
@@ -267,14 +269,15 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
 module.exports.logged_in = function(e, ctx, callback, callback2) {
 
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
     var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
     var options = {
         algorithms: ['RS256'],
-        audience: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
-        issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev'
+        audience: apiConf.api_prefix + apiConf.api_stage,
+        issuer: apiConf.api_prefix + apiConf.api_stage
     }
     console.log('accessToken');
     console.log(accessToken);
@@ -460,8 +463,6 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
 
 module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) {
 
-    // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
-
     // Get invitee email address and game ID from POST body.
     var emailAddress = e.body.email;
     var game = e.body.game;
@@ -492,6 +493,8 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
               console.log(data); gs.gs();  // successful response
 
               // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
+              var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+              var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
               AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
               var ses = new AWS.SES({
@@ -505,15 +508,15 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                     Message: {
                         Body: {
                             Text: {
-                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite?code=' + inviteCode +
-                                      "\n\nIf you don't want to play, you can ignore this message and the invitation will expire after 30 days."
+                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: ' + gcpConf.frontend_url + '?invite=' + inviteCode + ' (dev: http://localhost:3000?invite=' + inviteCode + ')' + 
+                                      '\n\nIf you don\'t want to play, you can ignore this message and the invitation will expire after 30 days.'
                             }
                         },
                         Subject: {
                             Data: accessToken.name + ' invites you to play Reversi.'
                         }
                     },
-                    Source: 'Jeremy@JeremyCarter.ca'
+                    Source: apiConf.email
                 };
 
                 console.log('===SENDING EMAIL===');
