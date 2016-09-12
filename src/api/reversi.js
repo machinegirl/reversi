@@ -100,7 +100,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                                 return;
                             }
 
-                            var friends = (e.referrer) ? [e.referrer] : [];
+                            // var friends = (e.referrer) ? [e.referrer] : [];
 
                             db.putAttributes({
                                 DomainName: 'reversi-user',
@@ -112,7 +112,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                                     new: [true, false],
                                     games_played: [0, false],
                                     games_won: [0, false],
-                                    friends: [friends, false]
+                                    friends: [[], false]
                                 })
                             }, (err, data) => {
                                 if (err) {
@@ -483,7 +483,8 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
         var params = {
           Attributes: module.exports.serialize({ /* required */
             timestamp: [Date.now().toString(), true],
-            game: [game, false]
+            game: [game, false],
+            inviter: [accessToken.sub, false]
           }),
           DomainName: 'reversi-invite', /* required */
           ItemName: inviteCode /* required */
@@ -562,6 +563,8 @@ module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
             }
 
             if ('Attributes' in data) {
+                // Add invitee to game in db
+                // Add invitee to inviter's friends and vice versa
 
             } else {
                 callback(JSON.stringify({error: invitation not found}));

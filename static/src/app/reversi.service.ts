@@ -294,11 +294,11 @@ export class ReversiService {
 		return validMoves;
 	}
 
-	login(idToken, referrer, callback) {
+	login(idToken, callback) {
 
 		let endpoint = '/login';
 
-		let body = (referrer) ? JSON.stringify({ 'idToken': idToken, 'referrer': referrer }) : JSON.stringify({ 'idToken': idToken });
+		let body = JSON.stringify({ 'idToken': idToken });
 		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
 		let options = new RequestOptions({ headers: headers });
 
@@ -470,7 +470,7 @@ export class ReversiService {
 		);
 	}
 
-	acceptInvite(invite, callback) {
+	acceptInvite(invite, accessToken, callback) {
 		let endpoint = '/invite';
 
 		let headers = new Headers({
@@ -481,7 +481,7 @@ export class ReversiService {
 		let body = JSON.stringify({'invite': invite});
 		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.get(this.apiPrefix + this.apiStage + endpoint, body, options)
+		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };

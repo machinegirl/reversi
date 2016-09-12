@@ -22,26 +22,26 @@ export class Main implements OnInit {
 	ngOnInit() {
         this.reversiService.init(() => {
             let inviteCode = this.reversiService.getParameterByName('invite', false);
-            if (invite != null) {
+            if (inviteCode != null) {
                 (<any>window).onSignIn = (function(googleUser) {
                     let profile = googleUser.getBasicProfile();
                     console.log('Name: ' + profile.getName());
                     let idToken = googleUser.getAuthResponse().id_token;
                     localStorage.setItem('google_id_token', idToken);
 
-                    this.reversiService.acceptInvite(inviteCode, (invite) => {
-                        this.reversiService.login(idToken, invite.referrer, (message) => {
-                            if (message.success) {
-                                localStorage.setItem('reversiAccessToken', message.accessToken);
+                    this.reversiService.login(idToken, (message) => {
+                        if (message.success) {
+                            localStorage.setItem('reversiAccessToken', message.accessToken);
+                            this.reversiService.acceptInvite(inviteCode, (invite) => {
                                 window.location.assign('/play?id=' + invite.game);
                                 return;
-                            }
-                            else {
-                                console.log(message);
-                            }
-                        });
-                    })
+                            });
+                        }
+                        else {
+                            console.log(message);
+                        }
 
+                    });
                }).bind(this);
             } else {
                 (<any>window).onSignIn = (function(googleUser) {
