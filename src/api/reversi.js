@@ -435,7 +435,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                             Data: accessToken.name + ' invites you to play Reversi.'
                         }
                     },
-                    Source: 'defcronyke@eternalvoid.net'
+                    Source: 'Jeremy@JeremyCarter.ca'
                 };
 
                 console.log('===SENDING EMAIL===');
