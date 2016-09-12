@@ -18,6 +18,9 @@ export class ReversiService {
 	apiStage: string;
 	pubnubSubscribeKey: string;			// NOTE: This is loaded from /assets/conf/pubnub.conf
 	googleIdentityPlatformKey: string;	// NOTE: This is loaded from /assets/conf/googleIdentityPlatform.key
+	apiConfLoaded: boolean;
+	pubnubConfLoaded: boolean;
+	googleIdentityPlatformKeyLoaded: boolean;
 
 	constructor(public http: Http) {
 
@@ -41,6 +44,7 @@ export class ReversiService {
 					// 	[0, 0, 0, 0, 0, 0, 0, 0]
 					// ];
 
+					// TODO: Move this somewhere else so init() can be idempotent.
 					if (window.location.pathname === '/play') {
 						let c = <HTMLCanvasElement> document.getElementById('gameBoard');
 						if (typeof c !== 'undefined') {
@@ -62,6 +66,12 @@ export class ReversiService {
 	}
 
 	loadApiConf(callback: any) {
+
+		if (this.apiConfLoaded) {
+			callback();
+			return;
+		}
+
 		let confPath = '/assets/conf/api.conf';
 
 		let headers = new Headers({
@@ -87,6 +97,7 @@ export class ReversiService {
 				this.xApiKey = body.x_api_key;
 				this.apiPrefix = body.api_prefix;
 				this.apiStage = body.api_stage;
+				this.apiConfLoaded = true;
 				callback();
 			},
 			err => console.log(err)
@@ -94,6 +105,12 @@ export class ReversiService {
 	}
 
 	loadPubnubConf(callback: any) {
+
+		if (this.pubnubConfLoaded) {
+			callback();
+			return;
+		}
+
 		let confPath = '/assets/conf/pubnub.conf';
 
 		let headers = new Headers({
@@ -117,6 +134,7 @@ export class ReversiService {
 		response.subscribe(
 			body => {
 				this.pubnubSubscribeKey = body.subscribe_key;
+				this.pubnubConfLoaded = true;
 				callback();
 			},
 			err => console.log(err)
@@ -124,6 +142,12 @@ export class ReversiService {
 	}
 
 	loadGoogleIdentityPlatformKey(callback: any) {
+
+		if (this.googleIdentityPlatformKeyLoaded) {
+			callback();
+			return;
+		}
+
 		let confPath = '/assets/conf/googleIdentityPlatform.key';
 
 		let headers = new Headers({
@@ -146,7 +170,8 @@ export class ReversiService {
 
 		response.subscribe(
 			body => {
-				this.pubnubSubscribeKey = body;
+				this.googleIdentityPlatformKey = body;
+				this.googleIdentityPlatformKeyLoaded = true;
 				callback();
 			},
 			err => console.log(err)
