@@ -294,11 +294,11 @@ export class ReversiService {
 		return validMoves;
 	}
 
-	login(idToken, callback) {
+	login(idToken, referrer, callback) {
 
 		let endpoint = '/login';
 
-		let body = JSON.stringify({ 'idToken': idToken });
+		let body = (referrer) ? JSON.stringify({ 'idToken': idToken, 'referrer': referrer }) : JSON.stringify({ 'idToken': idToken });
 		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
 		let options = new RequestOptions({ headers: headers });
 
@@ -450,6 +450,38 @@ export class ReversiService {
 		let options = new RequestOptions({ headers: headers });
 
 		let response = this.http.delete(this.apiPrefix + this.apiStage + endpoint, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg); // log to console instead
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			body => {
+				callback(body);
+			},
+			err => console.log(err)
+		);
+	}
+
+	acceptInvite(invite, callback) {
+		let endpoint = '/invite';
+
+		let headers = new Headers({
+			'X-Api-Key': this.xApiKey,
+			'X-Reversi-Auth': 'Bearer ' + accessToken,
+		});
+
+		let body = JSON.stringify({'invite': invite});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.get(this.apiPrefix + this.apiStage + endpoint, body, options)
 		.map(function(res: Response) {
 		  let body = res.json();
 		  return body || { };

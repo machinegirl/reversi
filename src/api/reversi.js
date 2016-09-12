@@ -18,7 +18,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
         const hasher = crypto.createHash('sha256');
         hasher.update(randomBytes + now.toString());
         var jti = hasher.digest('base64');
-        console.log(jti);
+        // console.log(jti);
 
         var options = {
             algorithm: 'RS256',
@@ -98,6 +98,8 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                                 return;
                             }
 
+                            var friends = (e.referrer) ? [e.referrer] : [];
+
                             db.putAttributes({
                                 DomainName: 'reversi-user',
                                 ItemName: body.sub,
@@ -108,7 +110,7 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                                     new: [true, false],
                                     games_played: [0, false],
                                     games_won: [0, false],
-                                    friends: [[], false]
+                                    friends: [friends, false]
                                 })
                             }, (err, data) => {
                                 if (err) {
@@ -427,15 +429,15 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                     Message: {
                         Body: {
                             Text: {
-                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev/invite?code=' + inviteCode +
-                                      "\n\nIf you don't want to play, you can ignore this message and the invitation will expire after 30 days."
+                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: https://reversi-2016.appspot.com?invite=' + inviteCode +
+                                      "\n\n ( localhost:3000?invite=" + inviteCode + " ) If you don't want to play, you can ignore this message and the invitation will expire after 30 days."
                             }
                         },
                         Subject: {
                             Data: accessToken.name + ' invites you to play Reversi.'
                         }
                     },
-                    Source: 'Jeremy@JeremyCarter.ca'
+                    Source: "Jeremy@JeremyCarter.ca"
                 };
 
                 console.log('===SENDING EMAIL===');
@@ -454,12 +456,42 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
         });
     });
 
-    // TODO: Implement GET /invite route, which will allow the invited user to accept the invitation to play by clicking a link in their email, and then signing in with Google.
 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 }
 
-module.exports.deleteUser = function(e, ctx, callback, decoded, callback2) {
+module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
+    var db = new AWS.SimpleDB();
+
+    db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
+        if (err) {
+            console.log(JSON.stringify(err));
+            callback(JSON.stringify(err));
+            return;
+        }
+
+        db.getAttributes({
+            DomainName: 'reversi-invite',
+            ItemName: e.body.invite,
+        }, (err, data) => {
+            if (err) {
+                console.log(JSON.stringify(err));
+                callback(JSON.stringify(err));
+                return;
+            }
+
+            if ('Attributes' in data) {
+                
+            } else {
+                callback(JSON.stringify({error: invitation not found}));
+            }
+        });
+
+
+    });
+}
+
+module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
@@ -471,7 +503,7 @@ module.exports.deleteUser = function(e, ctx, callback, decoded, callback2) {
 
         db.deleteAttributes({
             DomainName: 'reversi-user',
-            ItemName: decoded.sub,
+            ItemName: accessToken.sub,
         }, (err, data) => {
             if (err) {
                 console.log(JSON.stringify(err));
