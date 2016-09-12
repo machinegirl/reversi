@@ -9,6 +9,8 @@ var AWS = require('aws-sdk');
 
 module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+    var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
     var makeAccessToken = (body) => {
@@ -22,9 +24,9 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
         var options = {
             algorithm: 'RS256',
-            issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
+            issuer: apiConf.api_prefix + apiConf.api_stage,
             subject: body.sub,
-            audience: [body.sub, 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev', 'https://reversi-2016.appspot.com'],
+            audience: [body.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
             expiresIn: '1h',
             notBefore: 0,
             jwtid: jti
@@ -269,14 +271,15 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
 
 module.exports.logged_in = function(e, ctx, callback, callback2) {
 
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
     var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
     var options = {
         algorithms: ['RS256'],
-        audience: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev',
-        issuer: 'https://ztmyo899de.execute-api.us-east-1.amazonaws.com/dev'
+        audience: apiConf.api_prefix + apiConf.api_stage,
+        issuer: apiConf.api_prefix + apiConf.api_stage
     }
     console.log('accessToken');
     console.log(accessToken);
@@ -315,23 +318,10 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     });
 };
 
-module.exports.publish = function(e, ctx, callback, channel, message, callback2) {
-    var keys = JSON.parse(fs.readFileSync('keys/pubnub.keys')); // get publish and subscribe keys
-    pubnub = new PubNub({
-        publishKey : keys.publish,
-        subscribeKey : keys.subscribe
-    });
-    var publishConfig = {
-        channel : channel,
-        message : message
-    };
-    pubnub.publish(publishConfig, function(status, response) {
-        console.log(status, response); gs.gs();
-        callback2(status, response);
-    });
-};
-
 module.exports.logout = function(e, ctx, callback, decoded, callback2) {
+
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
     var db = new AWS.SimpleDB();
     params = {
       Attributes: [ /* required */
@@ -360,31 +350,120 @@ module.exports.logout = function(e, ctx, callback, decoded, callback2) {
     });
 };
 
-module.exports.serialize = function(obj) {
-    var attr = [];
+module.exports.game = function(e, ctx, callback, accessToken, callback2) {
+    // Create new game or load existing game from DB.
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
-    for (var key in obj) {
-        attr.push({
-            Name: key,
-            Value: JSON.stringify(obj[key][0]),
-            Replace: obj[key][1]
-        });
-    }
-    return attr;
-};
+    var db = new AWS.SimpleDB();
 
-module.exports.unserial = function(attr) {
-    var obj = {};
+    db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
 
-    for (var i = 0; i < attr.length; i++) {
-        obj[attr[i].Name] = JSON.parse(attr[i].Value);
-    }
-    return obj;
+        if (err) {
+            console.log('Error creating domain');
+            console.log(err);
+            callback2(accessToken);
+            return;
+        }
+        console.log('e:');
+        console.log(JSON.stringify(e));
+
+        if (JSON.stringify(e.query) === '{}') { // If we want to start a new game.
+
+            console.log('starting new game');
+
+            // Generate a unique game id, and use it as an Item name in a put request to SimpleDB.
+            var id = base64url(crypto.createHash('sha256').update(Buffer.concat([crypto.randomBytes(20), new Buffer(Date.now().toString(), 'utf-8')]).toString(), 'utf-8').digest());
+            console.log('game: ' + id);
+
+            // Put a new Item into SimpleDB, with the correct attributes for a new game.
+            var gameBoard = [];
+            for (var i = 0; i < 8; i++) {
+                var row = [];
+                for (var j = 0; j < 8; j++) {
+                    row.push(0);
+                }
+                gameBoard.push(row);
+            }
+
+            console.log(accessToken.name);
+            var attrs = module.exports.serialize({
+                'board': [gameBoard, false],
+                'players': [[accessToken.sub], false],
+                'names': [[accessToken.name], false],
+                'player_turn': [0, false],
+                'status': [0, false],
+                'pieces': [[32, 32], false]
+            });
+            console.log('!!attrs');
+            console.log(attrs);
+
+            var params = {
+                DomainName: 'reversi-game',
+                ItemName: id,
+                Attributes: attrs
+            };
+
+            db.putAttributes(params, (err, data) => {
+                if (err) {
+                    console.log(err, err.stack); // an error occurred
+                    callback(err);
+                    return;
+                } else {
+                    // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
+
+                    callback2({id: id});
+                    return;
+                }
+            });
+
+
+        } else {    // If we want to load an ongoing game.
+
+            var id = e.query.game;
+            console.log('loading game: ' + id);
+
+            // Try to get an Item from the SimpleDB game domain, whose Name is id. Do this with a direct key lookup, rather than performing a query.
+            var params = {
+                DomainName: 'reversi-game',
+                ItemName: id,
+                ConsistentRead: true
+            }
+
+            db.getAttributes(params, (err, data) => {
+                if (err) {
+                    // If Item is not found, return an error to the client and return from this function immediatly.
+                    console.log(err);
+                    callback(err);
+                    return;
+                }
+                console.log('!!data!!');
+                console.log(data);
+
+                var game = module.exports.unserial(data.Attributes);
+                console.log(game);
+                // If user sub claim is not found in players array, return an error and return from this function.
+                var validPlayer = false;
+                for (i = 0; i < game.players.length; i++) {
+                    if (accessToken.sub === game.players[i]) {
+                        validPlayer = true;
+                    }
+                }
+                if (!validPlayer) {
+                    callback('player is not in players array');
+                    return;
+                }
+
+
+                // Return the Game object to the client.
+                module.exports.publish(e, ctx, callback, 'game-' + id, {msg: 'player ' + accessToken.sub + ' is active on game ' + id}, () => {
+                    callback(null, {id: id, game: game});
+                });
+            })
+        }
+    });
 };
 
 module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) {
-
-    // TODO: Implement /invite route, which will allow the user to invite an opponent into their game (by email, or sub claim if they've played together before).
 
     // Get invitee email address and game ID from POST body.
     var emailAddress = e.body.email;
@@ -416,6 +495,8 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
               console.log(data); gs.gs();  // successful response
 
               // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
+              var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+              var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
               AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
               var ses = new AWS.SES({
@@ -429,15 +510,15 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                     Message: {
                         Body: {
                             Text: {
-                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: https://reversi-2016.appspot.com?invite=' + inviteCode +
-                                      "\n\n ( localhost:3000?invite=" + inviteCode + " ) If you don't want to play, you can ignore this message and the invitation will expire after 30 days."
+                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: ' + gcpConf.frontend_url + '?invite=' + inviteCode + ' (dev: http://localhost:3000?invite=' + inviteCode + ')' +
+                                      '\n\nIf you don\'t want to play, you can ignore this message and the invitation will expire after 30 days.'
                             }
                         },
                         Subject: {
                             Data: accessToken.name + ' invites you to play Reversi.'
                         }
                     },
-                    Source: "Jeremy@JeremyCarter.ca"
+                    Source: apiConf.email
                 };
 
                 console.log('===SENDING EMAIL===');
@@ -458,7 +539,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
 
 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
-}
+};
 
 module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
     var db = new AWS.SimpleDB();
@@ -481,7 +562,7 @@ module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
             }
 
             if ('Attributes' in data) {
-                
+
             } else {
                 callback(JSON.stringify({error: invitation not found}));
             }
@@ -492,6 +573,8 @@ module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
 }
 
 module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
+
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
@@ -512,4 +595,42 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
             callback2();
         });
     });
-}
+};
+
+module.exports.serialize = function(obj) {
+    var attr = [];
+
+    for (var key in obj) {
+        attr.push({
+            Name: key,
+            Value: JSON.stringify(obj[key][0]),
+            Replace: obj[key][1]
+        });
+    }
+    return attr;
+};
+
+module.exports.unserial = function(attr) {
+    var obj = {};
+
+    for (var i = 0; i < attr.length; i++) {
+        obj[attr[i].Name] = JSON.parse(attr[i].Value);
+    }
+    return obj;
+};
+
+module.exports.publish = function(e, ctx, callback, channel, message, callback2) {
+    var keys = JSON.parse(fs.readFileSync('keys/pubnub.keys')); // get publish and subscribe keys
+    pubnub = new PubNub({
+        publishKey : keys.publish,
+        subscribeKey : keys.subscribe
+    });
+    var publishConfig = {
+        channel : channel,
+        message : message
+    };
+    pubnub.publish(publishConfig, function(status, response) {
+        console.log(status, response); gs.gs();
+        callback2(status, response);
+    });
+};
