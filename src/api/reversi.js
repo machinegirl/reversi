@@ -13,42 +13,10 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
-    var makeAccessToken = (body) => {
-        var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
-        var now = Date.now();
-        var randomBytes = crypto.randomBytes(20);
-        const hasher = crypto.createHash('sha256');
-        hasher.update(randomBytes + now.toString());
-        var jti = hasher.digest('base64');
-        // console.log(jti);
-
-        var options = {
-            algorithm: 'RS256',
-            issuer: apiConf.api_prefix + apiConf.api_stage,
-            subject: body.sub,
-            audience: [body.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
-            expiresIn: '1h',
-            notBefore: 0,
-            jwtid: jti
-        };
-
-        var claims = {
-            email: body.email,
-            email_verified: body.email_verified,
-            name: body.name,
-            picture: body.picture,
-            given_name: body.given_name,
-            family_name: body.family_name,
-            locale: body.locale
-        };
-
-        var accessToken = jwt.sign(claims, cert, options);
-        return accessToken
-    };
-
     var db = new AWS.SimpleDB();
 
-    if (decoded === null || typeof decoded === 'undefined') {
+    // Sign in to reversi with google
+    if (decoded == null) {
         var idToken = e.idToken;
         var body = [];
 
@@ -71,63 +39,9 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                         });
                         return;
                     }
-                    //check if user is in db and enter if not
-                    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
-
-                        if (err) {
-                            console.log('error creating domain');
-                            console.log(err, err.stack);
-                            callback(err);
-                            return;
-                        }
-
-                        db.getAttributes({
-                            DomainName: 'reversi-user',
-                            ItemName: body.sub
-                        }, (err, data) => {
-
-                            if (err) {
-                                console.log('error getting attributes');
-                                console.log(JSON.stringify(err));
-                                callback(JSON.stringify(err));
-                                return;
-                            }
-
-                            if ('Attributes' in data) {
-                                console.log('found user');
-                                console.log(data.Attributes);
-                                callback2(makeAccessToken(body));
-                                return;
-                            }
-
-                            // var friends = (e.referrer) ? [e.referrer] : [];
-
-                            db.putAttributes({
-                                DomainName: 'reversi-user',
-                                ItemName: body.sub,
-                                Attributes: module.exports.serialize({
-                                    name: [body.name, false],
-                                    email: [body.email, false],
-                                    games: [[], false],
-                                    new: [true, false],
-                                    games_played: [0, false],
-                                    games_won: [0, false],
-                                    friends: [[], false]
-                                })
-                            }, (err, data) => {
-                                if (err) {
-                                    console.log('error creating user');
-                                    console.log(err, err.stack);
-                                    callback(err);
-                                    return;
-                                }
-                                var accessToken = makeAccessToken(body); //gs.gs();
-                                callback2(accessToken);
-                            });
-                        });
-                    });
-
-
+                    // Create new user if none exists
+                    module.exports.createUser(body, callback, callback2);
+                    return;
 
                 } else {
                     callback(null, {
@@ -146,8 +60,8 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
                 'accessToken': null
             });
         });
-    } else {
-        accessToken = makeAccessToken(decoded);
+    } else { // Refresh token
+        accessToken = module.exports.makeAccessToken(decoded);
 
         db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
 
@@ -159,114 +73,167 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
             }
 
             // Clean Blacklist
-            var now = Date.now();
-            console.log('now: ' + now);
-            var hourAgo = now - (1000 * 60 * 60);
-            console.log('hour ago: ' + hourAgo);
-            // hourAgo = 0;
-            // console.log('4 minutes ago');
-            // console.log(hourAgo);
-            var params = {
-              SelectExpression: "select * from `reversi-blacklist` where timestamp < '" + hourAgo + "'", /* required */
-            };
-            db.select(params, function(err, data) {
-                if (err) {
-                    console.log('error on first select');
-                    console.log(err, err.stack); // an error occurred
-                } else {
-                    // console.log('Check timestamp here');
-                    console.log('data: ' + JSON.stringify(data));  // successful response
-
-
-                    var deleteItems = (data) => {
-
-                        console.log('delete items data: ' + JSON.stringify(data));
-                        // Delete all items from select operation
-                        // console.log('trying to delete items');
-                        for (var i = 0; i < data.Items.length; i++) {
-                            var item = data.Items[i];
-                            // console.log(item);
-                            // console.log('Check timestamp here');
-                            // console.log(item.Attributes);
-                            var params = {
-                              DomainName: 'reversi-blacklist', /* required */
-                              ItemName: item.Name, /* required */
-                            };
-                            db.deleteAttributes(params, function(err, data) {
-                                if (err) {
-                                    console.log('error on delete');
-                                    console.log(err, err.stack); // an error occurred
-                                } else {
-                                    console.log('successful delete');
-                                    console.log(data);  // successful response
-                                }
-                            });
-                        }
-
-                        // Check for NextToken and call deleteItems if necessary
-                        if ('NextToken' in data) {
-                            console.log('next token detected');
-                            var params = {
-                                SelectExpression: 'select * from `reversi-blacklist` where timestamp < \'' + hourAgo + '\'', /* required */
-                                NextToken: data.NextToken
-                            };
-                            db.select(params, function(err, data) {
-                                if (err) {
-                                    console.log('error on second select');
-                                    console.log(err, err.stack); // an error occurred
-                                } else {
-                                    console.log('success on second select');
-                                    console.log(data);  // successful response
-                                    deleteItems(data);
-                                }
-                            });
-                        }
-
-                    };
-                    if ('Items' in data) {
-                        deleteItems(data);
-                    }
-                }
-            });
-
-            // Blacklist Token
-            console.log('blacklisting token'); //gs.gs();
-
-            module.exports.logout(e, ctx, callback, (data) => {
-                callback2(data);
-            });
-
-            // console.log('date as number');
-            // console.log(Date.now());
-            // console.log('date as string');
-            // console.log((Date.now()).toString());
-            // params = {
-            //   Attributes: [ /* required */
-            //     {
-            //       Name: 'timestamp', /* required */
-            //       Value: (Date.now()).toString(), /* required */
-            //       Replace: true
-            //     },
-            //     /* more items */
-            //   ],
-            //   DomainName: 'reversi-blacklist', /* required */
-            //   ItemName: decoded.jti, /* required */
-            // //   Expected: {
-            // //     Exists: true || false,
-            // //     Name: 'STRING_VALUE',
-            // //     Value: 'STRING_VALUE'
-            // //   }
-            // };
-            // db.putAttributes(params, (err, data) => {
-            //   if (err) {
-            //       console.log(err, err.stack); // an error occurred
-            //   } else {
-            //       console.log(data);  // successful response
-            //   }
-            // });
+            module.exports.cleanBlacklist(db, () => {
+                console.log('blacklisting token'); //gs.gs();
+                // Blacklist Token
+                module.exports.logout(e, ctx, callback, (data) => {
+                    callback2(data);
+                });
+            })
         });
-        // callback2(accessToken);
     }
+};
+
+module.exports.makeAccessToken = function(body) {
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+    var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
+    var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
+    var now = Date.now();
+    var randomBytes = crypto.randomBytes(20);
+    const hasher = crypto.createHash('sha256');
+    hasher.update(randomBytes + now.toString());
+    var jti = hasher.digest('base64');
+    // console.log(jti);
+
+    var options = {
+        algorithm: 'RS256',
+        issuer: apiConf.api_prefix + apiConf.api_stage,
+        subject: body.sub,
+        audience: [body.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
+        expiresIn: '1h',
+        notBefore: 0,
+        jwtid: jti
+    };
+
+    var claims = {
+        email: body.email,
+        email_verified: body.email_verified,
+        name: body.name,
+        picture: body.picture,
+        given_name: body.given_name,
+        family_name: body.family_name,
+        locale: body.locale
+    };
+
+    var accessToken = jwt.sign(claims, cert, options);
+    return accessToken
+};
+
+module.exports.createUser = function(body, callback, callback2) {
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+    var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+    var db = new AWS.SimpleDB();
+
+    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
+
+        if (err) {
+            console.log('error creating domain');
+            console.log(err, err.stack);
+            callback(err);
+            return;
+        }
+
+        db.putAttributes({
+            DomainName: 'reversi-user',
+            ItemName: body.sub,
+            Attributes: module.exports.serialize({
+                name: [body.name, false],
+                email: [body.email, false],
+                games: [[], false],
+                new: [true, false],
+                games_played: [0, false],
+                games_won: [0, false],
+                friends: [[], false]
+            })
+        }, (err, data) => {
+            if (err) {
+                console.log('error creating user');
+                console.log(err, err.stack);
+                callback(err);
+                return;
+            }
+            var accessToken = module.exports.makeAccessToken(body); //gs.gs();
+            callback2(accessToken);
+        });
+    });
+
+};
+
+module.exports.cleanBlacklist = function(db, callback) {
+    var now = Date.now();
+    console.log('now: ' + now);
+    var hourAgo = now - (1000 * 60 * 60);
+    console.log('hour ago: ' + hourAgo);
+    // hourAgo = 0;
+    // console.log('4 minutes ago');
+    // console.log(hourAgo);
+    var params = {
+      SelectExpression: "select * from `reversi-blacklist` where timestamp < '" + hourAgo + "'", /* required */
+    };
+    db.select(params, function(err, data) {
+        if (err) {
+            console.log('error on first select');
+            console.log(err, err.stack); // an error occurred
+        } else {
+            // console.log('Check timestamp here');
+            console.log('data: ' + JSON.stringify(data));  // successful response
+
+
+            var deleteItems = (data) => {
+
+                console.log('delete items data: ' + JSON.stringify(data));
+                // Delete all items from select operation
+                // console.log('trying to delete items');
+                for (var i = 0; i < data.Items.length; i++) {
+                    var item = data.Items[i];
+                    // console.log(item);
+                    // console.log('Check timestamp here');
+                    // console.log(item.Attributes);
+                    var params = {
+                      DomainName: 'reversi-blacklist', /* required */
+                      ItemName: item.Name, /* required */
+                    };
+                    db.deleteAttributes(params, function(err, data) {
+                        if (err) {
+                            console.log('error on delete');
+                            console.log(err, err.stack); // an error occurred
+                        } else {
+                            console.log('successful delete');
+                            console.log(data);  // successful response
+                        }
+                    });
+                }
+
+                // Check for NextToken and call deleteItems if necessary
+                if ('NextToken' in data) {
+                    console.log('next token detected');
+                    var params = {
+                        SelectExpression: 'select * from `reversi-blacklist` where timestamp < \'' + hourAgo + '\'', /* required */
+                        NextToken: data.NextToken
+                    };
+                    db.select(params, function(err, data) {
+                        if (err) {
+                            console.log('error on second select');
+                            console.log(err, err.stack); // an error occurred
+                        } else {
+                            console.log('success on second select');
+                            console.log(data);  // successful response
+                            deleteItems(data);
+                        }
+                    });
+                }
+
+            };
+            if ('Items' in data) {
+                deleteItems(data);
+                callback();
+            }
+        }
+    });
+
 };
 
 module.exports.logged_in = function(e, ctx, callback, callback2) {
@@ -567,7 +534,7 @@ module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
                 // Add invitee to inviter's friends and vice versa
 
             } else {
-                callback(JSON.stringify({error: invitation not found}));
+                callback(JSON.stringify({error: 'invitation not found'}));
             }
         });
 
