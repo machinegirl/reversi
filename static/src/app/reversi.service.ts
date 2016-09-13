@@ -1,6 +1,6 @@
 import { Injectable} from '@angular/core';
 import {JwtHelper} from 'angular2-jwt';
-import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
 
@@ -72,6 +72,8 @@ export class ReversiService {
 			return;
 		}
 
+		this.apiConfLoaded = true;
+
 		let confPath = '/assets/conf/api.conf';
 
 		let headers = new Headers({
@@ -97,7 +99,6 @@ export class ReversiService {
 				this.xApiKey = body.x_api_key;
 				this.apiPrefix = body.api_prefix;
 				this.apiStage = body.api_stage;
-				this.apiConfLoaded = true;
 				callback();
 			},
 			err => console.log(err)
@@ -110,6 +111,8 @@ export class ReversiService {
 			callback();
 			return;
 		}
+
+		this.pubnubConfLoaded = true;
 
 		let confPath = '/assets/conf/pubnub.conf';
 
@@ -134,7 +137,6 @@ export class ReversiService {
 		response.subscribe(
 			body => {
 				this.pubnubSubscribeKey = body.subscribe_key;
-				this.pubnubConfLoaded = true;
 				callback();
 			},
 			err => console.log(err)
@@ -147,6 +149,8 @@ export class ReversiService {
 			callback();
 			return;
 		}
+
+		this.googleIdentityPlatformKeyLoaded = true;
 
 		let confPath = '/assets/conf/googleIdentityPlatform.key';
 
@@ -171,7 +175,6 @@ export class ReversiService {
 		response.subscribe(
 			body => {
 				this.googleIdentityPlatformKey = body;
-				this.googleIdentityPlatformKeyLoaded = true;
 				callback();
 			},
 			err => console.log(err)
@@ -502,4 +505,47 @@ export class ReversiService {
 		);
 	}
 
+	getUser(accessToken, callback) {
+		// Get your profile info.
+
+		let endpoint = '/invite';
+
+		let headers = new Headers({
+			'X-Api-Key': this.xApiKey,
+			'X-Reversi-Auth': 'Bearer ' + accessToken,
+		});
+
+		let body = JSON.stringify({'invite': invite});
+		let options = new RequestOptions({ headers: headers });
+
+		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
+		.map(function(res: Response) {
+		  let body = res.json();
+		  return body || { };
+		})
+		.catch(function(error: any) {
+		  let errMsg = (error.message) ? error.message :
+		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		  console.log('!!error!!');
+		  console.log(errMsg); // log to console instead
+		  return Observable.throw(errMsg);
+		});
+
+		response.subscribe(
+			body => {
+				callback(body);
+			},
+			err => console.log(err)
+		);
+	}
+
+	// Make an API request
+	apiReq(method, endpoint, headers, body, callback) {
+		this.http.request(this.apiPrefix + this.apiStage + endpoint, {
+			method: method,
+			headers: headers,
+			body: JSON.stringify(body),
+			responseType: ResponseContentType.Json
+		});
+	}
 }

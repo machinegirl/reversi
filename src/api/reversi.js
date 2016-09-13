@@ -511,7 +511,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                     Message: {
                         Body: {
                             Text: {
-                                Data: accessToken.name + ' would like to play Reversi with you. To accept, click here: ' + gcpConf.frontend_url + '?invite=' + inviteCode + ' (dev: http://localhost:3000?invite=' + inviteCode + ')' +
+                                Data: accessToken.name + ' would like to play Reversi with you. Click here to play: ' + gcpConf.frontend_url + '?invite=' + inviteCode + ' (dev: http://localhost:3000?invite=' + inviteCode + ')' +
                                       '\n\nIf you don\'t want to play, you can ignore this message and the invitation will expire after 30 days.'
                             }
                         },
