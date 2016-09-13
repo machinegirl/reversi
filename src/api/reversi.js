@@ -7,7 +7,7 @@ var crypto = require('crypto');
 var base64url = require('base64url');
 var AWS = require('aws-sdk');
 
-module.exports.login = function(e, ctx, callback, decoded, callback2) {
+module.exports.login = function(e, ctx, callback, accessToken, callback2) {
 
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
@@ -16,71 +16,12 @@ module.exports.login = function(e, ctx, callback, decoded, callback2) {
     var db = new AWS.SimpleDB();
 
     // Sign in to reversi with google
-    if (decoded == null) {
-        var idToken = e.idToken;
-        var body = [];
-
-        https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + idToken, function(res) {
-
-            res.on('data', function(chunk) {
-                body.push(chunk);
-            }).on('end', function() {
-
-                if (res.statusCode === 200) {
-                    body = Buffer.concat(body).toString();
-                    body = JSON.parse(body);
-
-                    var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
-
-                    if (key.length > 0 && body.aud !== key) {
-                        callback(null, {
-                            'success': false,
-                            'accessToken': null
-                        });
-                        return;
-                    }
-                    // Create new user if none exists
-                    module.exports.createUser(body, callback, callback2);
-                    return;
-
-                } else {
-                    callback(null, {
-                        'success': false,
-                        'accessToken': null
-                    });
-                    return;
-                }
-            });
-        }).on('error', function(err) {
-            console.log('!!error!!');
-            console.log(err);
-            success = false;
-            callback(null, {
-                'success': success,
-                'accessToken': null
-            });
-        });
+    if (accessToken == null) {
+        module.exports.googleSignIn(e, ctx, callback, callback2);
+        return;
     } else { // Refresh token
-        accessToken = module.exports.makeAccessToken(decoded);
-
-        db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
-
-            if (err) {
-                console.log('Error creating domain');
-                console.log(err);
-                callback2(accessToken);
-                return;
-            }
-
-            // Clean Blacklist
-            module.exports.cleanBlacklist(db, () => {
-                console.log('blacklisting token'); //gs.gs();
-                // Blacklist Token
-                module.exports.logout(e, ctx, callback, (data) => {
-                    callback2(data);
-                });
-            })
-        });
+        module.exports.refreshToken(accessToken, callback, callback2);
+        return;
     }
 };
 
@@ -162,7 +103,10 @@ module.exports.createUser = function(body, callback, callback2) {
 
 };
 
-module.exports.cleanBlacklist = function(db, callback) {
+module.exports.cleanBlacklist = function(callback) {
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+    var db = new AWS.SimpleDB();
+
     var now = Date.now();
     console.log('now: ' + now);
     var hourAgo = now - (1000 * 60 * 60);
@@ -234,6 +178,80 @@ module.exports.cleanBlacklist = function(db, callback) {
         }
     });
 
+};
+
+module.exports.googleSignIn = function(e, ctx, callback, callback2) {
+    var idToken = e.idToken;
+    var body = [];
+
+    https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + idToken, function(res) {
+
+        res.on('data', function(chunk) {
+            body.push(chunk);
+        }).on('end', function() {
+
+            if (res.statusCode === 200) {
+                body = Buffer.concat(body).toString();
+                body = JSON.parse(body);
+
+                var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
+
+                if (key.length > 0 && body.aud !== key) {
+                    callback(null, {
+                        'success': false,
+                        'accessToken': null
+                    });
+                    return;
+                }
+                // Create new user if none exists
+                module.exports.createUser(body, callback, callback2);
+                return;
+
+            } else {
+                callback(null, {
+                    'success': false,
+                    'accessToken': null
+                });
+                return;
+            }
+        });
+    }).on('error', function(err) {
+        console.log('!!error!!');
+        console.log(err);
+        success = false;
+        callback(null, {
+            'success': success,
+            'accessToken': null
+        });
+    });
+};
+
+module.exports.refreshToken = function(accessToken, callback, callback2) {
+    var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
+    var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+    var db = new AWS.SimpleDB();
+
+    accessToken = module.exports.makeAccessToken(accessToken);
+
+    db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
+
+        if (err) {
+            console.log('Error creating domain');
+            console.log(err);
+            callback({error: 'error creating domain', 'accessToken': accessToken});
+            return;
+        }
+
+        // Clean Blacklist
+        module.exports.cleanBlacklist(() => {
+            console.log('blacklisting token'); //gs.gs();
+            // Blacklist Token
+            module.exports.logout(e, ctx, callback, (data) => {
+                callback2(data);
+            });
+        })
+    });
 };
 
 module.exports.logged_in = function(e, ctx, callback, callback2) {
