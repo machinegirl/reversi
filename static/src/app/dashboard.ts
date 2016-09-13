@@ -35,6 +35,13 @@ export class Dashboard implements OnInit {
                     window.location.assign('./');
                     return;
                 };
+
+                // TODO: GET /user
+                this.reversiService.getUser(accessToken, (res) => {
+                    // Set view vars from res.
+                });
+
+                // TODO: GET /friend?id=[23423432, 76765645, etc.]
             });
         });
 	}
