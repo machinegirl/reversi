@@ -384,6 +384,7 @@ export class ReversiService {
 		let endpoint = '/logged_in';
 
 		let headers = new Headers({
+			'Content-Type': 'application/json',
 			'X-Api-Key': this.xApiKey,
 			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
@@ -506,37 +507,14 @@ export class ReversiService {
 
 	// Get your profile info.
 	getUser(accessToken, callback) {
-		// this.apiReq(RequestMethod.Get, '/user', accessToken)
-
-		// let endpoint = '/invite';
-		//
-		// let headers = new Headers({
-		// 	'X-Api-Key': this.xApiKey,
-		// 	'X-Reversi-Auth': 'Bearer ' + accessToken,
-		// });
-		//
-		// let body = JSON.stringify({'invite': invite});
-		// let options = new RequestOptions({ headers: headers });
-		//
-		// let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
-		// .map(function(res: Response) {
-		//   let body = res.json();
-		//   return body || { };
-		// })
-		// .catch(function(error: any) {
-		//   let errMsg = (error.message) ? error.message :
-		//   error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		//   console.log('!!error!!');
-		//   console.log(errMsg); // log to console instead
-		//   return Observable.throw(errMsg);
-		// });
-		//
-		// response.subscribe(
-		// 	body => {
-		// 		callback(body);
-		// 	},
-		// 	err => console.log(err)
-		// );
+		this.apiReq(RequestMethod.Get, '/user', accessToken, null, (res, err) => {
+			if (err != null) {
+				console.log('API Request error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
+		});
 	}
 
 	// Make an API request
