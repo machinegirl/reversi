@@ -83,7 +83,12 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
     var db = new AWS.SimpleDB();
 
-    var [friends, games] = (invite != null) ? [[invite.inviterSub],[invite.game]] : [[],[]];
+    var friends = [];
+    var games = [];
+    if (invite != null) {
+        friends = [invite.inviter];
+        games = [invite.game];
+    }
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
@@ -227,7 +232,7 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
         });
     }).on('error', function(err) {
         console.log('!!error!!');
-        console.log(JSON.stringify(err));
+        console.log(JSON.stringify(err.errorMessage));
 
         callback({error: JSON.stringify(err)});
     });
@@ -556,7 +561,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
 
             if ('Attributes' in data) {
                 // Add invitee to game in db
-                let invite = module.exports.unserial(data.Attributes);
+                var invite = module.exports.unserial(data.Attributes);
                 db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
                     if (err) {
                         console.log(JSON.stringify(err));
@@ -605,25 +610,15 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
             return;
         }
 
-        db.batchPutAttributes({
+        db.PutAttributes({
             DomainName: 'reversi-friend',
-            Items: [
-                {
-                    Name: invite.inviter + '-' + idToken.sub,
-                    Attributes: module.exports.serialize({
-                        name: [idToken.name, false],
-                        email: [idToken.email, false],
-                        play_count: [0, false],
-                        wins: [0, false]
-                    })
-                }
-                // {
-                //     Name: idToken.sub + '-' + invite.inviter,
-                //     Attributes: module.exports.serialize({
-                //         name: [invite.]
-                //     })
-                // }
-            ]
+            ItemName: invite.inviter + '-' + idToken.sub,
+                Attributes: module.exports.serialize({
+                    name: [idToken.name, false],
+                    email: [idToken.email, false],
+                    play_count: [0, false],
+                    wins: [0, false]
+                })
         }, (err, data) => {
                 if (err) {
                     console.log(JSON.stringify(err));
