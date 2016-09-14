@@ -29,13 +29,11 @@ export class Main implements OnInit {
                     let idToken = googleUser.getAuthResponse().id_token;
                     localStorage.setItem('google_id_token', idToken);
 
-                    this.reversiService.login(idToken, (message) => {
+                    this.reversiService.acceptInvite(idToken, inviteCode, (message) => {
                         if (message.success) {
                             localStorage.setItem('reversiAccessToken', message.accessToken);
-                            this.reversiService.acceptInvite(inviteCode, (invite) => {
-                                window.location.assign('/play?id=' + invite.game);
-                                return;
-                            });
+                            window.location.assign('/play?id=' + message.invite.game);
+                            return;
                         }
                         else {
                             console.log(message);

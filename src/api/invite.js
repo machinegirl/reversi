@@ -8,10 +8,8 @@ module.exports.send_invite = (e, ctx, callback) => {
     });
 };
 
-module.exports.put_invite = (e, ctx, callback) => {
-    reversi.logged_in(e, ctx, callback, (accessToken) => {
-        reversi.put_invite(e, ctx, callback, accessToken, (invite) => {
-            callback(null, {'invite': invite});
-        })
-    })
+module.exports.accept_invite = (e, ctx, callback) => {
+    reversi.login(e, ctx, callback, null, (accessToken, invite) => {
+        callback(null, {'invite': invite, 'accessToken': accessToken});
+    });
 }

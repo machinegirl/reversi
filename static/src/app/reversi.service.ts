@@ -483,15 +483,14 @@ export class ReversiService {
 		);
 	}
 
-	acceptInvite(invite, accessToken, callback) {
+	acceptInvite(idToken, inviteCode, callback) {
 		let endpoint = '/invite';
 
 		let headers = new Headers({
 			'X-Api-Key': this.xApiKey,
-			'X-Reversi-Auth': 'Bearer ' + accessToken,
 		});
 
-		let body = JSON.stringify({'invite': invite});
+		let body = JSON.stringify({'inviteCode': inviteCode, 'idToken': idToken});
 		let options = new RequestOptions({ headers: headers });
 
 		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
