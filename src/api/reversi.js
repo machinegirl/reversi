@@ -15,12 +15,25 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
 
     var db = new AWS.SimpleDB();
 
-    // Sign in to reversi with google
-    if (accessToken == null) {
-        module.exports.googleSignIn(e, ctx, callback, callback2);
+    if (accessToken != null) {   // Refresh token
+        module.exports.refreshToken(accessToken, callback, (accessToken) => {
+            callback2(accessToken);
+            return;
+        });
         return;
-    } else { // Refresh token
-        module.exports.refreshToken(accessToken, callback, callback2);
+    } else if ('inviteCode' in e) { // Sign in with an invitation
+        module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
+            module.exports.acceptInvite(e, ctx, callback, gAccessToken, (accessToken, invite) => {
+                callback2(accessToken, invite);
+            })
+        });
+    } else {    // Sign in to reversi with google
+        module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
+            module.exports.createUser(gAccessToken, callback, (accessToken) => {
+                callback2(accessToken);
+                return;
+            })
+        });
         return;
     }
 };
@@ -203,8 +216,7 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
                     });
                     return;
                 }
-                // Create new user if none exists
-                module.exports.createUser(body, callback, callback2);
+                callback2(body);
                 return;
 
             } else {
@@ -248,7 +260,7 @@ module.exports.refreshToken = function(accessToken, callback, callback2) {
             console.log('blacklisting token'); //gs.gs();
             // Blacklist Token
             module.exports.logout(e, ctx, callback, (data) => {
-                callback2(data);
+                callback2(accessToken);
             });
         })
     });
@@ -268,7 +280,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     }
     console.log('accessToken');
     console.log(accessToken);
-    var decoded = jwt.verify(accessToken, cert, options, (err, decoded) => {
+    var decoded = jwt.verify(accessToken, cert, options, (err, accessToken) => {
         if (err !== null) {
             console.log(err);
             callback(err);
@@ -281,7 +293,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
 
         var params = {
           DomainName: 'reversi-blacklist', /* required */
-          ItemName: decoded.jti, /* required */
+          ItemName: accessToken.jti, /* required */
         //   ConsistentRead: true
         };
         db.getAttributes(params, (err, data) => {
@@ -296,14 +308,14 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
                   callback(err);
                   return;
               }  //gs.gs();
-              callback2(decoded);
+              callback2(accessToken);
           }
         });
 
     });
 };
 
-module.exports.logout = function(e, ctx, callback, decoded, callback2) {
+module.exports.logout = function(e, ctx, callback, accessToken, callback2) {
 
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
@@ -318,7 +330,7 @@ module.exports.logout = function(e, ctx, callback, decoded, callback2) {
         /* more items */
       ],
       DomainName: 'reversi-blacklist', /* required */
-      ItemName: decoded.jti, /* required */
+      ItemName: accessToken.jti, /* required */
     //   Expected: {
     //     Exists: true || false,
     //     Name: 'STRING_VALUE',
@@ -527,7 +539,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 };
 
-module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
+module.exports.acceptInvite = function(e, ctx, callback, accessToken, callback2) {
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
