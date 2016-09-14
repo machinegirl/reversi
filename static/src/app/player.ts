@@ -15,8 +15,8 @@ export class Player implements OnInit {
 	}
 
 	ngOnInit() {
-        reversiService(() => {
-            
+        this.reversiService.init(() => {
+
         });
 	}
 

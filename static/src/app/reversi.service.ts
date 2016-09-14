@@ -1,6 +1,6 @@
 import { Injectable} from '@angular/core';
 import {JwtHelper} from 'angular2-jwt';
-import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
+import { Http, Response, Headers, RequestMethod, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
 
@@ -505,47 +505,65 @@ export class ReversiService {
 		);
 	}
 
+	// Get your profile info.
 	getUser(accessToken, callback) {
-		// Get your profile info.
+		// this.apiReq(RequestMethod.Get, '/user', accessToken)
 
-		let endpoint = '/invite';
-
-		let headers = new Headers({
-			'X-Api-Key': this.xApiKey,
-			'X-Reversi-Auth': 'Bearer ' + accessToken,
-		});
-
-		let body = JSON.stringify({'invite': invite});
-		let options = new RequestOptions({ headers: headers });
-
-		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
-		});
-
-		response.subscribe(
-			body => {
-				callback(body);
-			},
-			err => console.log(err)
-		);
+		// let endpoint = '/invite';
+		//
+		// let headers = new Headers({
+		// 	'X-Api-Key': this.xApiKey,
+		// 	'X-Reversi-Auth': 'Bearer ' + accessToken,
+		// });
+		//
+		// let body = JSON.stringify({'invite': invite});
+		// let options = new RequestOptions({ headers: headers });
+		//
+		// let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
+		// .map(function(res: Response) {
+		//   let body = res.json();
+		//   return body || { };
+		// })
+		// .catch(function(error: any) {
+		//   let errMsg = (error.message) ? error.message :
+		//   error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		//   console.log('!!error!!');
+		//   console.log(errMsg); // log to console instead
+		//   return Observable.throw(errMsg);
+		// });
+		//
+		// response.subscribe(
+		// 	body => {
+		// 		callback(body);
+		// 	},
+		// 	err => console.log(err)
+		// );
 	}
 
 	// Make an API request
-	apiReq(method, endpoint, headers, body, callback) {
+	apiReq(method, endpoint, accessToken, body, callback) {
 		this.http.request(this.apiPrefix + this.apiStage + endpoint, {
 			method: method,
-			headers: headers,
-			body: JSON.stringify(body),
-			responseType: ResponseContentType.Json
-		});
+			headers: new Headers({
+				'Content-Type': 	'application/json',
+				'X-Api-Key': 		this.xApiKey,
+				'X-Reversi-Auth': 	'Bearer ' + accessToken
+			}),
+			body: JSON.stringify(body)
+		})
+		.map((res: Response) => {	// TODO: Are .map() and .catch() really necessary?
+			return res;
+		})
+		.catch((err: any) => {
+			return err;
+		})
+		.subscribe(
+			(res) => {
+				callback(res, null);
+			},
+			(err) => {
+				callback(null, err);
+			}
+		);
 	}
 }
