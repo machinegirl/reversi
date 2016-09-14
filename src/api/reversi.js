@@ -560,6 +560,31 @@ module.exports.put_invite = function(e, ctx, callback, accessToken, callback2) {
     });
 }
 
+module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
+
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+    var db = new AWS.SimpleDB();
+
+    db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
+        if (err) {
+            console.log(JSON.stringify(err));
+            callback(JSON.stringify(err));
+            return;
+        }
+
+        // db.deleteAttributes({
+        //     DomainName: 'reversi-user',
+        //     ItemName: accessToken.sub,
+        // }, (err, data) => {
+        //     if (err) {
+        //         console.log(JSON.stringify(err));
+        //         callback(JSON.stringify(err));
+        //     }
+            callback2({success: true});
+        // });
+    });
+};
+
 module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
 
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
