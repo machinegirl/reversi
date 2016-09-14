@@ -307,37 +307,9 @@ export class ReversiService {
 			}
 			callback(res);
 		});
-
-		// let endpoint = '/login';
-		//
-		// let body = JSON.stringify({ 'idToken': idToken });
-		// let headers = new Headers({ 'X-Api-Key': this.xApiKey});
-		// let options = new RequestOptions({ headers: headers });
-		//
-		// let response = this.http.post(this.apiPrefix + this.apiStage + endpoint, body, options)
-		// .map(function(res: Response) {
-		//   let body = res.json();
-		//   return body || { };
-		// })
-		// .catch(function(error: any) {
-		//   let errMsg = (error.message) ? error.message :
-		//   error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		//   console.log('!!error!!');
-		//   console.log(errMsg); // log to console instead
-		//   return Observable.throw(errMsg);
-		// });
-		//
-		// response.subscribe(
-		// 	message => {
-		// 		callback(message);	// Send back the result
-		// 	},
-		// 	err => console.log(err)
-		// );
 	}
 
 	refreshLogin() {
-
-		let endpoint = '/refresh_login';
 
 		let accessToken = localStorage.getItem('reversiAccessToken');
 		if (typeof accessToken === 'undefined' || accessToken === null) {
@@ -350,39 +322,25 @@ export class ReversiService {
 		timeout = timeout < 0 ? 0 : timeout;
 		let refresh = () => {
 
-			let headers = new Headers({
-				'X-Api-Key': this.xApiKey,
-				'X-Reversi-Auth': 'Bearer ' + accessToken,
-			});
-			let options = new RequestOptions({ headers: headers });
+			let accessToken = localStorage.getItem('reversiAccessToken');
 
-			let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, null, options)
-			.map(function(res: Response) {
-			  let body = res.json();
-			  return body || { };
-			})
-			.catch(function(error: any) {
-			  let errMsg = (error.message) ? error.message :
-			  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-			  console.log('!!error!!');
-			  console.log(errMsg); // log to console instead
-			  return Observable.throw(errMsg);
-			});
+			this.apiReq(RequestMethod.Put, '/refresh_login', accessToken, null, null, (res, err) => {
+				if (err != null) {
+					console.log('API Request Error:');
+					console.log(err);
+					return;
+				}
 
-			response.subscribe(
-				message => {
-					console.log('refresh token success: ' + message.success);
-					console.log('new access token: ' + message.accessToken);
-					if (!message.success) {
-						localStorage.removeItem('reversiAccessToken');
-						window.location.assign('/');
-						return;
-					}
-					window.setTimeout(refresh, 1000 * 60 * 55);
-					localStorage.setItem('reversiAccessToken', message.accessToken);
-				},
-				err => console.log(err)
-			);
+				console.log('refresh token success: ' + res.success);
+				console.log('new access token: ' + res.accessToken);
+				if (!res.success) {	// TODO: Can we move this into the if err != null above?
+					localStorage.removeItem('reversiAccessToken');
+					window.location.assign('/');
+					return;
+				}
+				window.setTimeout(refresh, 1000 * 60 * 55);		// TODO: Call 5 minutes before token expires
+				localStorage.setItem('reversiAccessToken', res.accessToken);
+			});
 		};
 
 		window.setTimeout(refresh, timeout);
@@ -390,128 +348,51 @@ export class ReversiService {
 
 	loggedIn(accessToken, callback) {
 
-		let endpoint = '/logged_in';
-
-		let headers = new Headers({
-			'Content-Type': 'application/json',
-			'X-Api-Key': this.xApiKey,
-			'X-Reversi-Auth': 'Bearer ' + accessToken,
+		this.apiReq(RequestMethod.Get, '/logged_in', accessToken, null, null, (res, err) => {
+			if (err != null) {
+				console.log('API Request Error:');
+				console.log(err);
+				return;
+			}
+			this.refreshLogin();
+			callback(res);
 		});
-		let options = new RequestOptions({ headers: headers });
-
-		let response = this.http.get(this.apiPrefix + this.apiStage + endpoint, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
-		});
-
-		response.subscribe(
-			loggedIn => {
-				this.refreshLogin();
-				callback(loggedIn);	// Send back the result
-			},
-			err => console.log(err)
-		);
 	}
 
 	logout(accessToken, callback) {
 
-		let endpoint = '/logout';
-
-		let headers = new Headers({
-			'X-Api-Key': this.xApiKey,
-			'X-Reversi-Auth': 'Bearer ' + accessToken,
+		this.apiReq(RequestMethod.Put, '/logout', accessToken, null, null, (res, err) => {
+			if (err != null) {
+				console.log('API Request Error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
 		});
-		let options = new RequestOptions({ headers: headers });
-
-		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, null, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
-		});
-
-		response.subscribe(
-			logout => {
-				callback(logout);	// Send back the result
-			},
-			err => console.log(err)
-		);
-
-
 	}
 
 	deleteUser(accessToken, callback) {
-		let endpoint = '/user';
-		let headers = new Headers({
-			'X-Api-Key': this.xApiKey,
-			'X-Reversi-Auth': 'Bearer ' + accessToken,
-		});
-		let options = new RequestOptions({ headers: headers });
 
-		let response = this.http.delete(this.apiPrefix + this.apiStage + endpoint, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
+		this.apiReq(RequestMethod.Delete, '/user', accessToken, null, null, (res, err) => {
+			if (err != null) {
+				console.log('API Request Error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
 		});
-
-		response.subscribe(
-			body => {
-				callback(body);
-			},
-			err => console.log(err)
-		);
 	}
 
 	acceptInvite(idToken, inviteCode, callback) {
-		let endpoint = '/invite';
 
-		let headers = new Headers({
-			'X-Api-Key': this.xApiKey,
+		this.apiReq(RequestMethod.Put, '/invite', null, null, {idToken: idToken, inviteCode: inviteCode}, (res, err) => {
+			if (err != null) {
+				console.log('API Request Error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
 		});
-
-		let body = JSON.stringify({'inviteCode': inviteCode, 'idToken': idToken});
-		let options = new RequestOptions({ headers: headers });
-
-		let response = this.http.put(this.apiPrefix + this.apiStage + endpoint, body, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
-		});
-
-		response.subscribe(
-			body => {
-				callback(body);
-			},
-			err => console.log(err)
-		);
 	}
 
 	// Get your profile info.
@@ -530,12 +411,15 @@ export class ReversiService {
 	apiReq(method, endpoint, accessToken, headers, body, callback) {
 
 		let h = {
-			'Content-Type': 'application/json',
 			'X-Api-Key': 	this.xApiKey
 		};
 
 		if (accessToken != null) {
 			h['X-Reversi-Auth'] = 'Bearer ' + accessToken;
+		}
+
+		if (endpoint !== '/login' && body != null) {	// TODO: Figure out why POST /login fails if we sent Content-Type: application/json
+			h['Content-Type'] = 'application/json';
 		}
 
 		if (headers != null) {
@@ -544,13 +428,18 @@ export class ReversiService {
 			}
 		}
 
-		this.http.request(this.apiPrefix + this.apiStage + endpoint, {
+		let reqOpts = {
 			method: method,
-			headers: new Headers(h),
-			body: JSON.stringify(body)
-		})
+			headers: new Headers(h)
+		};
+
+		if (body != null) {
+			reqOpts['body'] = JSON.stringify(body);
+		}
+
+		this.http.request(this.apiPrefix + this.apiStage + endpoint, reqOpts)
 		.map((res: Response) => {	// TODO: Are .map() and .catch() really necessary?
-			return res;
+			return res.json();
 		})
 		.catch((err: any) => {
 			return err;

@@ -1,5 +1,5 @@
 import { Component, OnInit} from '@angular/core';
-import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Http, Response, Headers, RequestMethod, RequestOptions } from '@angular/http';
 import {Location} from '@angular/common';
 // import {WebsocketService} from './websocket.service';
 import {ReversiService} from './reversi.service';
@@ -174,46 +174,58 @@ export class Play implements OnInit {
 
       invite() {
 
-          let endpoint = '/invite';
+          let accessToken = localStorage.getItem('reversiAccessToken');
+          let game = this.reversiService.getParameterByName('game', false);
 
-          let inviteUrl = this.reversiService.apiPrefix + this.reversiService.apiStage + endpoint;
-
-          console.log(this.opponentEmail);
-          console.log(this.reversiService.getParameterByName('game', false));
-
-          let body = JSON.stringify({
-              email: this.opponentEmail,
-              game: this.reversiService.getParameterByName('game', false)
+          this.reversiService.apiReq(RequestMethod.Post, '/invite', accessToken, null, {email: this.opponentEmail, game: game}, (res, err) => {
+              if (err != null) {
+                  console.log('API Request Error:');
+                  console.log(err);
+                  return;
+              }
+              this.reversiService.loadGame(game);
           });
-          let headers = new Headers({
-              'Content-Type': 'application/json',
-              'X-Api-Key': this.reversiService.xApiKey,
-              'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
-          });
-          let options = new RequestOptions({ headers: headers });
 
-          let response = this.http.post(inviteUrl, body, options)
-            .map(function(res: Response) {
-              let body = res.json();
-              return body || { };
-            })
-            .catch(function(error: any) {
-              let errMsg = (error.message) ? error.message :
-              error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-              console.log('!!error!!');
-              console.log(errMsg); // log to console instead
-              return Observable.throw(errMsg);
-            });
-
-          response.subscribe(
-            message => {
-                console.log(message);
-                let id = window.location.search;
-                 let idLength: number = id.length;
-                 id = id.substring(4, idLength);
-                this.reversiService.loadGame(id);
-            },
-            err => console.log(err)
-          );
+        //   let endpoint = '/invite';
+          //
+        //   let inviteUrl = this.reversiService.apiPrefix + this.reversiService.apiStage + endpoint;
+          //
+        //   console.log(this.opponentEmail);
+        //   console.log(this.reversiService.getParameterByName('game', false));
+          //
+        //   let body = JSON.stringify({
+        //       email: this.opponentEmail,
+        //       game: this.reversiService.getParameterByName('game', false)
+        //   });
+        //   let headers = new Headers({
+        //       'Content-Type': 'application/json',
+        //       'X-Api-Key': this.reversiService.xApiKey,
+        //       'X-Reversi-Auth': 'Bearer ' + localStorage.getItem('reversiAccessToken')
+        //   });
+        //   let options = new RequestOptions({ headers: headers });
+          //
+        //   let response = this.http.post(inviteUrl, body, options)
+        //     .map(function(res: Response) {
+        //       let body = res.json();
+        //       return body || { };
+        //     })
+        //     .catch(function(error: any) {
+        //       let errMsg = (error.message) ? error.message :
+        //       error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+        //       console.log('!!error!!');
+        //       console.log(errMsg); // log to console instead
+        //       return Observable.throw(errMsg);
+        //     });
+          //
+        //   response.subscribe(
+        //     message => {
+        //         console.log(message);
+        //         let id = window.location.search;
+        //          let idLength: number = id.length;
+        //          id = id.substring(4, idLength);
+        //         this.reversiService.loadGame(id);
+        //     },
+        //     err => console.log(err)
+        //   );
       }
 }

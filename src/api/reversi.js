@@ -85,8 +85,8 @@ module.exports.createUser = function(body, callback, callback2) {
 
         if (err) {
             console.log('error creating domain');
-            console.log(err, err.stack);
-            callback(err);
+            console.log(JSON.stringify(err));
+            callback(JSON.stringify(err));
             return;
         }
 
@@ -105,11 +105,11 @@ module.exports.createUser = function(body, callback, callback2) {
         }, (err, data) => {
             if (err) {
                 console.log('error creating user');
-                console.log(err, err.stack);
-                callback(err);
+                console.log(JSON.stringify(err));
+                callback(JSON.stringify(err));
                 return;
             }
-            var accessToken = module.exports.makeAccessToken(body); //gs.gs();
+            var accessToken = module.exports.makeAccessToken(body);
             callback2(accessToken);
         });
     });
@@ -156,7 +156,7 @@ module.exports.cleanBlacklist = function(callback) {
                     db.deleteAttributes(params, function(err, data) {
                         if (err) {
                             console.log('error on delete');
-                            console.log(err, err.stack); // an error occurred
+                            console.log(JSON.stringify(err)); // an error occurred
                         } else {
                             console.log('successful delete');
                             console.log(data);  // successful response
@@ -174,10 +174,10 @@ module.exports.cleanBlacklist = function(callback) {
                     db.select(params, function(err, data) {
                         if (err) {
                             console.log('error on second select');
-                            console.log(err, err.stack); // an error occurred
+                            console.log(JSON.stringify(err)); // an error occurred
                         } else {
                             console.log('success on second select');
-                            console.log(data);  // successful response
+                            console.log(JSON.stringify(data));  // successful response
                             deleteItems(data);
                         }
                     });
@@ -217,15 +217,15 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
                 return;
 
             } else {
-                callback({error: JSON.stringify(res, true)});
+                callback({error: JSON.stringify(res.statusCode)});
                 return;
             }
         });
     }).on('error', function(err) {
         console.log('!!error!!');
-        console.log(err);
+        console.log(JSON.stringify(err));
 
-        callback({error: JSON.stringify(err, true)});
+        callback({error: JSON.stringify(err)});
     });
 };
 
@@ -241,14 +241,14 @@ module.exports.refreshToken = function(accessToken, callback, callback2) {
 
         if (err) {
             console.log('Error creating domain');
-            console.log(err);
-            callback({error: JSON.stringify(err, true)});
+            console.log(JSON.stringify(err));
+            callback({error: JSON.stringify(err)});
             return;
         }
 
         // Clean Blacklist
         module.exports.cleanBlacklist(() => {
-            console.log('blacklisting token'); //gs.gs();
+            console.log('blacklisting token');
             // Blacklist Token
             module.exports.logout(e, ctx, callback, (data) => {
                 callback2(accessToken);
@@ -262,6 +262,8 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
+    console.log('!! ' + JSON.stringify(e));
+
     var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
     var options = {
@@ -273,8 +275,8 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     console.log(accessToken);
     var decoded = jwt.verify(accessToken, cert, options, (err, accessToken) => {
         if (err !== null) {
-            console.log(err);
-            callback(err);
+            console.log(JSON.stringify(err));
+            callback({error: JSON.stringify(err)});
             return;
         }
 
@@ -289,16 +291,16 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         };
         db.getAttributes(params, (err, data) => {
           if (err) {
-              console.log(err, err.stack); // an error occurred
-              callback(err);
+              console.log(JSON.stringify(err, true)); // an error occurred
+              callback({error: JSON.stringify(err)});
               return;
           } else {
               console.log(data);           // successful response
               if ('Attributes' in data) {
-                  console.log(err);
-                  callback(err);
+                  console.log(JSON.stringify(err));
+                  callback(JSON.stringify(err));
                   return;
-              }  //gs.gs();
+              }
               callback2(accessToken);
           }
         });
@@ -332,7 +334,7 @@ module.exports.logout = function(e, ctx, callback, accessToken, callback2) {
       if (err) {
           console.log(err, err.stack); // an error occurred
       } else {
-          console.log(data); gs.gs();  // successful response
+          console.log(data);  // successful response
           callback2(data);
       }
     });
@@ -348,7 +350,7 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
 
         if (err) {
             console.log('Error creating domain');
-            console.log(err);
+            console.log(JSON.stringify(err));
             callback2(accessToken);
             return;
         }
@@ -393,8 +395,8 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
 
             db.putAttributes(params, (err, data) => {
                 if (err) {
-                    console.log(err, err.stack); // an error occurred
-                    callback(err);
+                    console.log(JSON.stringify(err)); // an error occurred
+                    callback(JSON.stringify(err));
                     return;
                 } else {
                     // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
@@ -420,15 +422,15 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
             db.getAttributes(params, (err, data) => {
                 if (err) {
                     // If Item is not found, return an error to the client and return from this function immediatly.
-                    console.log(err);
-                    callback(err);
+                    console.log(JSON.stringify(err));
+                    callback(JSON.stringify(err));
                     return;
                 }
                 console.log('!!data!!');
-                console.log(data);
+                console.log(JSON.stringify(data));
 
                 var game = module.exports.unserial(data.Attributes);
-                console.log(game);
+                console.log(JSON.stringify(game));
                 // If user sub claim is not found in players array, return an error and return from this function.
                 var validPlayer = false;
                 for (i = 0; i < game.players.length; i++) {
@@ -479,9 +481,9 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
         };
         db.putAttributes(params, (err, data) => {
           if (err) {
-              console.log(err, err.stack); // an error occurred
+              console.log(JSON.stringify(err)); // an error occurred
           } else {
-              console.log(data); gs.gs();  // successful response
+              console.log(JSON.stringify(data));  // successful response
 
               // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
               var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
@@ -512,10 +514,10 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
 
                 console.log('===SENDING EMAIL===');
                 var email = ses.sendEmail(eParams, function(err, data){
-                    if(err) console.log(err);
+                    if(err) console.log(JSON.stringify(err));
                     else {
                         console.log('===EMAIL SENT===');
-                        console.log(data);
+                        console.log(JSON.stringify(data));
 
                         callback2(data);
                     }
@@ -569,7 +571,7 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
-        if (err) {
+        if (err != null) {
             console.log(JSON.stringify(err));
             callback(JSON.stringify(err));
             return;
@@ -646,7 +648,7 @@ module.exports.publish = function(e, ctx, callback, channel, message, callback2)
         message : message
     };
     pubnub.publish(publishConfig, function(status, response) {
-        console.log(status, response); gs.gs();
+        console.log(status, response);
         callback2(status, response);
     });
 };
