@@ -23,13 +23,15 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
         return;
     } else if ('inviteCode' in e) { // Sign in with an invitation
         module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
-            module.exports.acceptInvite(e, ctx, callback, gAccessToken, (accessToken, invite) => {
-                callback2(accessToken, invite);
-            })
+            module.exports.acceptInvite(e, ctx, callback, gAccessToken, (invite) => {
+                module.exports.createUser(gAccessToken, invite, (accessToken) => {
+                    callback2(accessToken, invite);
+                });
+            });
         });
     } else {    // Sign in to reversi with google
         module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
-            module.exports.createUser(gAccessToken, callback, (accessToken) => {
+            module.exports.createUser(gAccessToken, null, callback, (accessToken) => {
                 callback2(accessToken);
                 return;
             })
@@ -75,11 +77,13 @@ module.exports.makeAccessToken = function(body) {
     return accessToken
 };
 
-module.exports.createUser = function(body, callback, callback2) {
+module.exports.createUser = function(gAccessToken, invite, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
     var db = new AWS.SimpleDB();
+
+    var [friends, games] = (invite != null) ? [[invite.inviterSub],[invite.game]] : [[],[]];
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
@@ -96,11 +100,11 @@ module.exports.createUser = function(body, callback, callback2) {
             Attributes: module.exports.serialize({
                 name: [body.name, false],
                 email: [body.email, false],
-                games: [[], false],
+                games: [games, false],
                 new: [true, false],
                 games_played: [0, false],
                 games_won: [0, false],
-                friends: [[], false]
+                friends: [friends, false]
             })
         }, (err, data) => {
             if (err) {
@@ -217,7 +221,7 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
                 return;
 
             } else {
-                callback({error: JSON.stringify(res, true)});
+                callback({error: JSON.stringify(res.statusCode, true)});
                 return;
             }
         });
@@ -530,7 +534,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 };
 
-module.exports.acceptInvite = function(e, ctx, callback, accessToken, callback2) {
+module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2) {
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
@@ -552,7 +556,34 @@ module.exports.acceptInvite = function(e, ctx, callback, accessToken, callback2)
 
             if ('Attributes' in data) {
                 // Add invitee to game in db
-                // Add invitee to inviter's friends and vice versa
+                let invite = module.exports.unserial(data.Attributes);
+                db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
+                    if (err) {
+                        console.log(JSON.stringify(err));
+                        callback(JSON.stringify(err));
+                        return;
+                    }
+
+                    db.putAttributes({
+                        DomainName: 'reversi-game',
+                        ItemName: invite.game,
+                        Attributes: module.exports.serialize({
+                            players: [[invite.inviter, gAccessToken.sub], true]
+                        }, (err, data) => {
+                            if (err) {
+                                console.log(JSON.stringify(err));
+                                callback(JSON.stringify(err));
+                                return;
+                            }
+                            // Add invitee to inviter's friends and vice versa
+                            module.exports.createFriendship(invite, gAccessToken, callback, () => {
+                                callback2(invite);
+                                return;
+                            })
+                        })
+                    });
+
+                })
 
             } else {
                 callback(JSON.stringify({error: 'invitation not found'}));
@@ -561,7 +592,51 @@ module.exports.acceptInvite = function(e, ctx, callback, accessToken, callback2)
 
 
     });
-}
+};
+
+module.exports.createFriendship = function(invite, gAccessToken, callback, callback2) {
+    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+    var db = new AWS.SimpleDB();
+
+    db.createDomain({DomainName: 'reversi-friend'}, (err, data) => {
+        if (err) {
+            console.log(JSON.stringify(err));
+            callback(JSON.stringify(err));
+            return;
+        }
+
+        db.batchPutAttributes({
+            DomainName: 'reversi-friend',
+            Items: [
+                {
+                    Name: invite.inviter + '-' + gAccessToken.sub,
+                    Attributes: module.exports.serialize({
+                        name: [gAccessToken.name, false],
+                        email: [gAccessToken.email, false],
+                        play_count: [0, false],
+                        wins: [0, false]
+                    })
+                }
+                // {
+                //     Name: gAccessToken.sub + '-' + invite.inviter,
+                //     Attributes: module.exports.serialize({
+                //         name: [invite.]
+                //     })
+                // }
+            ]
+        }, (err, data) => {
+                if (err) {
+                    console.log(JSON.stringify(err));
+                    callback(JSON.stringify(err));
+                    return;
+                }
+
+                callback2();
+                return;
+
+        });
+    });
+};
 
 module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
 
