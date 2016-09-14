@@ -197,10 +197,7 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
                 var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
 
                 if (key.length > 0 && body.aud !== key) {
-                    callback(null, {
-                        'success': false,
-                        'accessToken': null
-                    });
+                    callback({error: 'idToken aud claim is incorrect'});
                     return;
                 }
                 // Create new user if none exists
@@ -208,21 +205,15 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
                 return;
 
             } else {
-                callback(null, {
-                    'success': false,
-                    'accessToken': null
-                });
+                callback({error: JSON.stringify(res, true)});
                 return;
             }
         });
     }).on('error', function(err) {
         console.log('!!error!!');
         console.log(err);
-        success = false;
-        callback(null, {
-            'success': success,
-            'accessToken': null
-        });
+
+        callback({error: JSON.stringify(err, true)});
     });
 };
 
@@ -239,7 +230,7 @@ module.exports.refreshToken = function(accessToken, callback, callback2) {
         if (err) {
             console.log('Error creating domain');
             console.log(err);
-            callback({error: 'error creating domain', 'accessToken': accessToken});
+            callback({error: JSON.stringify(err, true)});
             return;
         }
 

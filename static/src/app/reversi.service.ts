@@ -299,31 +299,40 @@ export class ReversiService {
 
 	login(idToken, callback) {
 
-		let endpoint = '/login';
-
-		let body = JSON.stringify({ 'idToken': idToken });
-		let headers = new Headers({ 'X-Api-Key': this.xApiKey});
-		let options = new RequestOptions({ headers: headers });
-
-		let response = this.http.post(this.apiPrefix + this.apiStage + endpoint, body, options)
-		.map(function(res: Response) {
-		  let body = res.json();
-		  return body || { };
-		})
-		.catch(function(error: any) {
-		  let errMsg = (error.message) ? error.message :
-		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-		  console.log('!!error!!');
-		  console.log(errMsg); // log to console instead
-		  return Observable.throw(errMsg);
+		this.apiReq(RequestMethod.Post, '/login', null, null, {idToken: idToken}, (res, err) => {
+			if (err != null) {
+				console.log('API Request Error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
 		});
 
-		response.subscribe(
-			message => {
-				callback(message);	// Send back the result
-			},
-			err => console.log(err)
-		);
+		// let endpoint = '/login';
+		//
+		// let body = JSON.stringify({ 'idToken': idToken });
+		// let headers = new Headers({ 'X-Api-Key': this.xApiKey});
+		// let options = new RequestOptions({ headers: headers });
+		//
+		// let response = this.http.post(this.apiPrefix + this.apiStage + endpoint, body, options)
+		// .map(function(res: Response) {
+		//   let body = res.json();
+		//   return body || { };
+		// })
+		// .catch(function(error: any) {
+		//   let errMsg = (error.message) ? error.message :
+		//   error.status ? `${error.status} - ${error.statusText}` : 'Server error';
+		//   console.log('!!error!!');
+		//   console.log(errMsg); // log to console instead
+		//   return Observable.throw(errMsg);
+		// });
+		//
+		// response.subscribe(
+		// 	message => {
+		// 		callback(message);	// Send back the result
+		// 	},
+		// 	err => console.log(err)
+		// );
 	}
 
 	refreshLogin() {
@@ -508,7 +517,7 @@ export class ReversiService {
 
 	// Get your profile info.
 	getUser(accessToken, callback) {
-		this.apiReq(RequestMethod.Get, '/user', accessToken, null, (res, err) => {
+		this.apiReq(RequestMethod.Get, '/user', accessToken, null, null, (res, err) => {
 			if (err != null) {
 				console.log('API Request error:');
 				console.log(err);
@@ -519,14 +528,26 @@ export class ReversiService {
 	}
 
 	// Make an API request
-	apiReq(method, endpoint, accessToken, body, callback) {
+	apiReq(method, endpoint, accessToken, headers, body, callback) {
+
+		let h = {
+			'Content-Type': 'application/json',
+			'X-Api-Key': 	this.xApiKey
+		};
+
+		if (accessToken != null) {
+			h['X-Reversi-Auth'] = 'Bearer ' + accessToken;
+		}
+
+		if (headers != null) {
+			for (let key in headers) {
+				h[key] = headers[key];
+			}
+		}
+
 		this.http.request(this.apiPrefix + this.apiStage + endpoint, {
 			method: method,
-			headers: new Headers({
-				'Content-Type': 	'application/json',
-				'X-Api-Key': 		this.xApiKey,
-				'X-Reversi-Auth': 	'Bearer ' + accessToken
-			}),
+			headers: new Headers(h),
 			body: JSON.stringify(body)
 		})
 		.map((res: Response) => {	// TODO: Are .map() and .catch() really necessary?
