@@ -141,6 +141,25 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
+    acceptInvite:
+        handler: invite.accept_invite
+        events:
+            - http:
+                path: invite
+                method: put
+                private: true
+                cors:
+                    origins:
+                        - '*'
+                    headers:
+                        - Content-Type
+                        - X-Amz-Date
+                        - Authorization
+                        - X-Api-Key
+                        - X-Amz-Security-Token
+                        - X-Reversi-Auth
+
+
     getUser:
         handler: user.get
         events:

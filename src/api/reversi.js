@@ -21,9 +21,13 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
             return;
         });
         return;
-    } else if ('inviteCode' in e) { // Sign in with an invitation
-        module.exports.googleSignIn(e, ctx, callback, (idToken) => {
+    } else if ('body' in e && 'inviteCode' in e.body) { // Sign in with an invitation
+        console.log('signing in to reversi');
+        console.log(e.body);
+        module.exports.googleSignIn(e.body, ctx, callback, (idToken) => {
+            console.log('sign in success, accepting invite');
             module.exports.acceptInvite(e, ctx, callback, idToken, (invite) => {
+                console.log('accepted invite, creating user');
                 module.exports.createUser(idToken, invite, (accessToken) => {
                     callback2(accessToken, invite);
                 });
@@ -103,7 +107,7 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
         if (err) {
             console.log('error creating domain');
             console.log(JSON.stringify(err));
-            callback(err);
+            callback({error: err});
             return;
         }
 
@@ -211,7 +215,6 @@ module.exports.cleanBlacklist = function(callback) {
 };
 
 module.exports.googleSignIn = function(e, ctx, callback, callback2) {
-    console.log(e);
     var idToken = e.idToken;
     var body = [];
 
@@ -554,8 +557,9 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
         if (err) {
+            console.log('error creating database');
             console.log(JSON.stringify(err));
-            callback(err);
+            callback({error: JSON.stringify(err)});
             return;
         }
 
@@ -564,41 +568,49 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
             ItemName: e.body.inviteCode,
         }, (err, data) => {
             if (err) {
+                console.log('error getting invite');
                 console.log(JSON.stringify(err));
-                callback(err);
+                callback({error: JSON.stringify(err)});
                 return;
             }
 
             if ('Attributes' in data) {
+                console.log('Attributes');
+                console.log(data.Attributes);
                 // Add invitee to game in db
                 var invite = module.exports.unserial(data.Attributes);
-                db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
-                    if (err) {
-                        console.log(JSON.stringify(err));
-                        callback(err);
-                        return;
-                    }
+                console.log('invite');
+                console.log(invite);
+                // db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
+                //     if (err) {
+                //         console.log(JSON.stringify(err));
+                //         callback(err);
+                //         return;
+                //     }
 
-                    db.putAttributes({
-                        DomainName: 'reversi-game',
-                        ItemName: invite.game,
-                        Attributes: module.exports.serialize({
+                db.putAttributes({
+                    DomainName: 'reversi-game',
+                    ItemName: invite.game,
+                    Attributes: module.exports.serialize({
                             players: [[invite.inviter, idToken.sub], true]
-                        }, (err, data) => {
-                            if (err) {
-                                console.log(JSON.stringify(err));
-                                callback(err);
-                                return;
-                            }
-                            // Add invitee to inviter's friends and vice versa
-                            module.exports.createFriendship(invite, idToken, callback, () => {
-                                callback2(invite);
-                                return;
-                            })
                         })
+                    }, (err, data) => {
+                        if (err) {
+                            console.log('error putting players into game');
+                            console.log(JSON.stringify(err));
+                            callback(err);
+                            return;
+                        }
+                        // Add invitee to inviter's friends and vice versa
+                        console.log('creating friendship')
+                        module.exports.createFriendship(invite, idToken, callback, () => {
+                            console.log('successfully created friendship');
+                            callback2(invite);
+                            return;
+                        });
                     });
 
-                })
+                // })
 
             } else {
                 callback({error: 'invitation not found'});
@@ -620,7 +632,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
             return;
         }
 
-        db.PutAttributes({
+        db.putAttributes({
             DomainName: 'reversi-friend',
             ItemName: invite.inviter + '-' + idToken.sub,
                 Attributes: module.exports.serialize({

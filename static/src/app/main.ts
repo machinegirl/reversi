@@ -22,6 +22,8 @@ export class Main implements OnInit {
 	ngOnInit() {
         this.reversiService.init(() => {
             let inviteCode = this.reversiService.getParameterByName('invite', false);
+            console.log(inviteCode);
+            // let invite = true;
             if (inviteCode != null) {
                 (<any>window).onSignIn = (function(googleUser) {
                     let profile = googleUser.getBasicProfile();
@@ -29,14 +31,15 @@ export class Main implements OnInit {
                     let idToken = googleUser.getAuthResponse().id_token;
                     localStorage.setItem('google_id_token', idToken);
 
-                    this.reversiService.acceptInvite(idToken, inviteCode, (message) => {
-                        if (message.success) {
-                            localStorage.setItem('reversiAccessToken', message.accessToken);
-                            window.location.assign('/play?id=' + message.invite.game);
+                    this.reversiService.acceptInvite(idToken, inviteCode, (res, err) => {
+                        if (res != null) {
+                            console.log(res);
+                            localStorage.setItem('reversiAccessToken', res.accessToken);
+                            // window.location.assign('/play?id=' + res.invite.game);
                             return;
                         }
                         else {
-                            console.log(message);
+                            console.log(err);
                         }
 
                     });
