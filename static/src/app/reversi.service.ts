@@ -418,7 +418,7 @@ export class ReversiService {
 			h['X-Reversi-Auth'] = 'Bearer ' + accessToken;
 		}
 
-		if (endpoint !== '/login' && body != null) {	// TODO: Figure out why POST /login fails if we sent Content-Type: application/json
+		if (endpoint !== '/login' && body != null) {	// TODO: Figure out why POST /login fails if we set Content-Type: application/json
 			h['Content-Type'] = 'application/json';
 		}
 

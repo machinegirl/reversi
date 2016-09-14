@@ -284,10 +284,8 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
             return;
         }
 
-        // TODO: Check blacklist
-
+        // Check blacklist
         var db = new AWS.SimpleDB();
-
         var params = {
           DomainName: 'reversi-blacklist', /* required */
           ItemName: accessToken.jti, /* required */
@@ -652,6 +650,18 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
             return;
         }
 
+        db.getAttributes({
+            DomainName: 'reversi-user',
+            ItemName: accessToken.sub
+        }, (err, data) => {
+            if (err) {
+                console.log(JSON.stringify(err))
+                callback({error: err});
+                return;
+            }
+            callback2(data);
+        });
+
         // db.deleteAttributes({
         //     DomainName: 'reversi-user',
         //     ItemName: accessToken.sub,
@@ -660,7 +670,7 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
         //         console.log(JSON.stringify(err));
         //         callback(JSON.stringify(err));
         //     }
-            callback2({success: true});
+            // callback2({success: true});
         // });
     });
 };
@@ -679,7 +689,7 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
 
         db.deleteAttributes({
             DomainName: 'reversi-user',
-            ItemName: accessToken.sub,
+            ItemName: accessToken.sub
         }, (err, data) => {
             if (err) {
                 console.log(JSON.stringify(err));
