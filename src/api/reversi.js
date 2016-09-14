@@ -22,16 +22,16 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
         });
         return;
     } else if ('inviteCode' in e) { // Sign in with an invitation
-        module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
-            module.exports.acceptInvite(e, ctx, callback, gAccessToken, (invite) => {
-                module.exports.createUser(gAccessToken, invite, (accessToken) => {
+        module.exports.googleSignIn(e, ctx, callback, (idToken) => {
+            module.exports.acceptInvite(e, ctx, callback, idToken, (invite) => {
+                module.exports.createUser(idToken, invite, (accessToken) => {
                     callback2(accessToken, invite);
                 });
             });
         });
     } else {    // Sign in to reversi with google
-        module.exports.googleSignIn(e, ctx, callback, (gAccessToken) => {
-            module.exports.createUser(gAccessToken, null, callback, (accessToken) => {
+        module.exports.googleSignIn(e, ctx, callback, (idToken) => {
+            module.exports.createUser(idToken, null, callback, (accessToken) => {
                 callback2(accessToken);
                 return;
             })
@@ -40,7 +40,7 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
     }
 };
 
-module.exports.makeAccessToken = function(body) {
+module.exports.makeAccessToken = function(idToken) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
@@ -56,28 +56,28 @@ module.exports.makeAccessToken = function(body) {
     var options = {
         algorithm: 'RS256',
         issuer: apiConf.api_prefix + apiConf.api_stage,
-        subject: body.sub,
-        audience: [body.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
+        subject: idToken.sub,
+        audience: [idToken.sub, apiConf.api_prefix + apiConf.api_stage, gcpConf.frontend_url],
         expiresIn: '1h',
         notBefore: 0,
         jwtid: jti
     };
 
     var claims = {
-        email: body.email,
-        email_verified: body.email_verified,
-        name: body.name,
-        picture: body.picture,
-        given_name: body.given_name,
-        family_name: body.family_name,
-        locale: body.locale
+        email: idToken.email,
+        email_verified: idToken.email_verified,
+        name: idToken.name,
+        picture: idToken.picture,
+        given_name: idToken.given_name,
+        family_name: idToken.family_name,
+        locale: idToken.locale
     };
 
     var accessToken = jwt.sign(claims, cert, options);
     return accessToken
 };
 
-module.exports.createUser = function(gAccessToken, invite, callback, callback2) {
+module.exports.createUser = function(idToken, invite, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
@@ -90,16 +90,16 @@ module.exports.createUser = function(gAccessToken, invite, callback, callback2) 
         if (err) {
             console.log('error creating domain');
             console.log(JSON.stringify(err));
-            callback(JSON.stringify(err));
+            callback(err);
             return;
         }
 
         db.putAttributes({
             DomainName: 'reversi-user',
-            ItemName: body.sub,
+            ItemName: idToken.sub,
             Attributes: module.exports.serialize({
-                name: [body.name, false],
-                email: [body.email, false],
+                name: [idToken.name, false],
+                email: [idToken.email, false],
                 games: [games, false],
                 new: [true, false],
                 games_played: [0, false],
@@ -110,10 +110,10 @@ module.exports.createUser = function(gAccessToken, invite, callback, callback2) 
             if (err) {
                 console.log('error creating user');
                 console.log(JSON.stringify(err));
-                callback(JSON.stringify(err));
+                callback(err);
                 return;
             }
-            var accessToken = module.exports.makeAccessToken(body);
+            var accessToken = module.exports.makeAccessToken(idToken);
             callback2(accessToken);
         });
     });
@@ -198,26 +198,26 @@ module.exports.cleanBlacklist = function(callback) {
 };
 
 module.exports.googleSignIn = function(e, ctx, callback, callback2) {
-    var idToken = e.idToken;
-    var body = [];
+    var idToken = e.body;
+    var idToken = [];
 
     https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + idToken, function(res) {
 
         res.on('data', function(chunk) {
-            body.push(chunk);
+            idToken.push(chunk);
         }).on('end', function() {
 
             if (res.statusCode === 200) {
-                body = Buffer.concat(body).toString();
-                body = JSON.parse(body);
+                idToken = Buffer.concat(idToken).toString();
+                idToken = JSON.parse(idToken);
 
                 var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
 
-                if (key.length > 0 && body.aud !== key) {
+                if (key.length > 0 && idToken.aud !== key) {
                     callback({error: 'idToken aud claim is incorrect'});
                     return;
                 }
-                callback2(body);
+                callback2(idToken);
                 return;
 
             } else {
@@ -302,7 +302,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
               console.log(data);           // successful response
               if ('Attributes' in data) {
                   console.log(JSON.stringify(err));
-                  callback(JSON.stringify(err));
+                  callback(err);
                   return;
               }
               callback2(accessToken);
@@ -400,7 +400,7 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
             db.putAttributes(params, (err, data) => {
                 if (err) {
                     console.log(JSON.stringify(err)); // an error occurred
-                    callback(JSON.stringify(err));
+                    callback(err);
                     return;
                 } else {
                     // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
@@ -427,7 +427,7 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
                 if (err) {
                     // If Item is not found, return an error to the client and return from this function immediatly.
                     console.log(JSON.stringify(err));
-                    callback(JSON.stringify(err));
+                    callback(err);
                     return;
                 }
                 console.log('!!data!!');
@@ -536,23 +536,23 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 };
 
-module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2) {
+module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
         if (err) {
             console.log(JSON.stringify(err));
-            callback(JSON.stringify(err));
+            callback(err);
             return;
         }
 
         db.getAttributes({
             DomainName: 'reversi-invite',
-            ItemName: e.body.invite,
+            ItemName: e.body.inviteCode,
         }, (err, data) => {
             if (err) {
                 console.log(JSON.stringify(err));
-                callback(JSON.stringify(err));
+                callback(err);
                 return;
             }
 
@@ -562,7 +562,7 @@ module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2
                 db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
                     if (err) {
                         console.log(JSON.stringify(err));
-                        callback(JSON.stringify(err));
+                        callback(err);
                         return;
                     }
 
@@ -570,15 +570,15 @@ module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2
                         DomainName: 'reversi-game',
                         ItemName: invite.game,
                         Attributes: module.exports.serialize({
-                            players: [[invite.inviter, gAccessToken.sub], true]
+                            players: [[invite.inviter, idToken.sub], true]
                         }, (err, data) => {
                             if (err) {
                                 console.log(JSON.stringify(err));
-                                callback(JSON.stringify(err));
+                                callback(err);
                                 return;
                             }
                             // Add invitee to inviter's friends and vice versa
-                            module.exports.createFriendship(invite, gAccessToken, callback, () => {
+                            module.exports.createFriendship(invite, idToken, callback, () => {
                                 callback2(invite);
                                 return;
                             })
@@ -588,7 +588,7 @@ module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2
                 })
 
             } else {
-                callback(JSON.stringify({error: 'invitation not found'}));
+                callback({error: 'invitation not found'});
             }
         });
 
@@ -596,14 +596,14 @@ module.exports.acceptInvite = function(e, ctx, callback, gAccessToken, callback2
     });
 };
 
-module.exports.createFriendship = function(invite, gAccessToken, callback, callback2) {
+module.exports.createFriendship = function(invite, idToken, callback, callback2) {
     AWS.config.loadFromPath('keys/awsClientLibrary.keys');
     var db = new AWS.SimpleDB();
 
     db.createDomain({DomainName: 'reversi-friend'}, (err, data) => {
         if (err) {
             console.log(JSON.stringify(err));
-            callback(JSON.stringify(err));
+            callback(err);
             return;
         }
 
@@ -611,16 +611,16 @@ module.exports.createFriendship = function(invite, gAccessToken, callback, callb
             DomainName: 'reversi-friend',
             Items: [
                 {
-                    Name: invite.inviter + '-' + gAccessToken.sub,
+                    Name: invite.inviter + '-' + idToken.sub,
                     Attributes: module.exports.serialize({
-                        name: [gAccessToken.name, false],
-                        email: [gAccessToken.email, false],
+                        name: [idToken.name, false],
+                        email: [idToken.email, false],
                         play_count: [0, false],
                         wins: [0, false]
                     })
                 }
                 // {
-                //     Name: gAccessToken.sub + '-' + invite.inviter,
+                //     Name: idToken.sub + '-' + invite.inviter,
                 //     Attributes: module.exports.serialize({
                 //         name: [invite.]
                 //     })
@@ -629,7 +629,7 @@ module.exports.createFriendship = function(invite, gAccessToken, callback, callb
         }, (err, data) => {
                 if (err) {
                     console.log(JSON.stringify(err));
-                    callback(JSON.stringify(err));
+                    callback(err);
                     return;
                 }
 
@@ -648,7 +648,7 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err != null) {
             console.log(JSON.stringify(err));
-            callback(JSON.stringify(err));
+            callback(err);
             return;
         }
 
@@ -658,7 +658,7 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
         // }, (err, data) => {
         //     if (err) {
         //         console.log(JSON.stringify(err));
-        //         callback(JSON.stringify(err));
+        //         callback(err);
         //     }
             callback2({success: true});
         // });
@@ -673,7 +673,7 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err) {
             console.log(JSON.stringify(err));
-            callback(JSON.stringify(err));
+            callback(err);
             return;
         }
 
@@ -683,7 +683,7 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
         }, (err, data) => {
             if (err) {
                 console.log(JSON.stringify(err));
-                callback(JSON.stringify(err));
+                callback(err);
             }
             callback2();
         });
