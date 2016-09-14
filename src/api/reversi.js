@@ -34,7 +34,7 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
             module.exports.createUser(idToken, null, callback, (accessToken) => {
                 callback2(accessToken);
                 return;
-            })
+            });
         });
         return;
     }
@@ -607,25 +607,15 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
             return;
         }
 
-        db.batchPutAttributes({
+        db.PutAttributes({
             DomainName: 'reversi-friend',
-            Items: [
-                {
-                    Name: invite.inviter + '-' + idToken.sub,
-                    Attributes: module.exports.serialize({
-                        name: [idToken.name, false],
-                        email: [idToken.email, false],
-                        play_count: [0, false],
-                        wins: [0, false]
-                    })
-                }
-                // {
-                //     Name: idToken.sub + '-' + invite.inviter,
-                //     Attributes: module.exports.serialize({
-                //         name: [invite.]
-                //     })
-                // }
-            ]
+            ItemName: invite.inviter + '-' + idToken.sub,
+                Attributes: module.exports.serialize({
+                    name: [idToken.name, false],
+                    email: [idToken.email, false],
+                    play_count: [0, false],
+                    wins: [0, false]
+                })
         }, (err, data) => {
                 if (err) {
                     console.log(JSON.stringify(err));
