@@ -721,7 +721,9 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
                 callback({error: err});
                 return;
             }
-            callback2(data);
+            // TODO: data appears to have two Name: 'games' entries in it. The second one is an empty array and is wiping out the first populated array.
+            console.log('getUser data: ' + data);
+            callback2(module.exports.unserial(data.Attributes));
         });
 
         // db.deleteAttributes({
