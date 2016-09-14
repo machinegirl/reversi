@@ -32,15 +32,15 @@ export class Main implements OnInit {
                     localStorage.setItem('google_id_token', idToken);
 
                     this.reversiService.acceptInvite(idToken, inviteCode, (res, err) => {
-                        if (res != null) {
-                            console.log(res);
+                        if (err != null) {
+                            console.log(err);
                             localStorage.setItem('reversiAccessToken', res.accessToken);
                             // window.location.assign('/play?id=' + res.invite.game);
                             return;
                         }
-                        else {
-                            console.log(err);
-                        }
+                        // else {
+                            console.log(res);
+                        // }
 
                     });
                }).bind(this);

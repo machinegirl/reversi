@@ -7,13 +7,16 @@ var crypto = require('crypto');
 var base64url = require('base64url');
 var AWS = require('aws-sdk');
 
+AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+module.exports.db = new AWS.SimpleDB();
+
 module.exports.login = function(e, ctx, callback, accessToken, callback2) {
 
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     if (accessToken != null) {   // Refresh token
         module.exports.refreshToken(accessToken, callback, (accessToken) => {
@@ -50,7 +53,7 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
 module.exports.makeAccessToken = function(idToken) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
 
     var cert = fs.readFileSync('keys/accessTokenKey.pem'); // get private key
     var now = Date.now();
@@ -89,12 +92,12 @@ module.exports.makeAccessToken = function(idToken) {
 module.exports.createUser = function(idToken, invite, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     var friends = [];
     var games = [];
-    console.log('invite');
+    console.log('createUser invite');
     console.log(invite)
     if (invite != null) {
         friends = [invite.inviter];
@@ -104,12 +107,12 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
-        if (err) {
-            console.log('error creating domain');
-            console.log(JSON.stringify(err));
-            callback({error: err});
-            return;
-        }
+        // if (err) {
+        //     console.log('error creating reversi-user domain');
+        //     console.log(JSON.stringify(err));
+        //     callback({error: err});
+        //     return;
+        // }
 
         db.putAttributes({
             DomainName: 'reversi-user',
@@ -138,8 +141,8 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
 };
 
 module.exports.cleanBlacklist = function(callback) {
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     var now = Date.now();
     console.log('now: ' + now);
@@ -254,15 +257,15 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
 module.exports.refreshToken = function(accessToken, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     accessToken = module.exports.makeAccessToken(accessToken);
 
     db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
 
         if (err) {
-            console.log('Error creating domain');
+            console.log('Error creating reversi-blacklist domain');
             console.log(JSON.stringify(err));
             callback({error: JSON.stringify(err)});
             return;
@@ -282,7 +285,7 @@ module.exports.refreshToken = function(accessToken, callback, callback2) {
 module.exports.logged_in = function(e, ctx, callback, callback2) {
 
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
 
     console.log('!! ' + JSON.stringify(e));
 
@@ -303,7 +306,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         }
 
         // Check blacklist
-        var db = new AWS.SimpleDB();
+        var db = module.exports.db;
         var params = {
           DomainName: 'reversi-blacklist', /* required */
           ItemName: accessToken.jti, /* required */
@@ -330,9 +333,9 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
 
 module.exports.logout = function(e, ctx, callback, accessToken, callback2) {
 
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
     params = {
       Attributes: [ /* required */
         {
@@ -362,14 +365,14 @@ module.exports.logout = function(e, ctx, callback, accessToken, callback2) {
 
 module.exports.game = function(e, ctx, callback, accessToken, callback2) {
     // Create new game or load existing game from DB.
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
 
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
 
         if (err) {
-            console.log('Error creating domain');
+            console.log('Error creating reversi-game domain');
             console.log(JSON.stringify(err));
             callback2(accessToken);
             return;
@@ -486,7 +489,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     console.log('inviteCode: ' + inviteCode);
     console.log('game: ' + game);
 
-    var db = new AWS.SimpleDB();
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
 
@@ -508,7 +511,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
               // Send email to invitee, with a clickable link in it pointing to the backend route GET /invite.
               var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
               var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
-              AWS.config.loadFromPath('keys/awsClientLibrary.keys');
+
 
               var ses = new AWS.SES({
                    region: 'us-east-1'
@@ -553,7 +556,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
 };
 
 module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
-    var db = new AWS.SimpleDB();
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
         if (err) {
@@ -579,7 +582,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                 console.log(data.Attributes);
                 // Add invitee to game in db
                 var invite = module.exports.unserial(data.Attributes);
-                console.log('invite');
+                console.log('acceptInvite invite');
                 console.log(invite);
                 // db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
                 //     if (err) {
@@ -602,7 +605,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                             return;
                         }
                         // Add invitee to inviter's friends and vice versa
-                        console.log('creating friendship')
+                        console.log('creating friendship');
                         module.exports.createFriendship(invite, idToken, callback, () => {
                             console.log('successfully created friendship');
                             callback2(invite);
@@ -622,11 +625,12 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
 };
 
 module.exports.createFriendship = function(invite, idToken, callback, callback2) {
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-friend'}, (err, data) => {
         if (err) {
+            console.log('failed creating reversi-friend domain');
             console.log(JSON.stringify(err));
             callback(err);
             return;
@@ -642,23 +646,23 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                     wins: [0, false]
                 })
         }, (err, data) => {
-                if (err) {
-                    console.log(JSON.stringify(err));
-                    callback(err);
-                    return;
-                }
-
-                callback2();
+            if (err) {
+                console.log('failed putting to reversi-friend domain, item name: ' + invite.inviter + '-' + idToken.sub);
+                console.log(JSON.stringify(err));
+                callback(err);
                 return;
+            }
 
+            callback2();
+            return;
         });
     });
 };
 
 module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
 
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err != null) {
@@ -694,8 +698,8 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
 
 module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
 
-    AWS.config.loadFromPath('keys/awsClientLibrary.keys');
-    var db = new AWS.SimpleDB();
+
+    var db = module.exports.db;
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err) {
