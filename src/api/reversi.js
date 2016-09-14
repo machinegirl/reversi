@@ -107,12 +107,12 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
-        // if (err) {
-        //     console.log('error creating reversi-user domain');
-        //     console.log(JSON.stringify(err));
-        //     callback({error: err});
-        //     return;
-        // }
+        if (err) {
+            console.log('error creating reversi-user domain');
+            console.log(JSON.stringify(err));
+            // callback({error: err});
+            // return;
+        }
 
         db.putAttributes({
             DomainName: 'reversi-user',
@@ -267,8 +267,8 @@ module.exports.refreshToken = function(e, accessToken, callback, callback2) {
         if (err) {
             console.log('Error creating reversi-blacklist domain');
             console.log(JSON.stringify(err));
-            callback({error: JSON.stringify(err)});
-            return;
+            // callback({error: JSON.stringify(err)});
+            // return;
         }
 
         // Clean Blacklist
@@ -374,8 +374,8 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
         if (err) {
             console.log('Error creating reversi-game domain');
             console.log(JSON.stringify(err));
-            callback2(accessToken);
-            return;
+            // callback2(accessToken);
+            // return;
         }
         console.log('e:');
         console.log(JSON.stringify(e));
@@ -493,6 +493,13 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
 
+        if (err) {
+            console.log('Error creating reversi-game domain');
+            console.log(JSON.stringify(err));
+            // callback2(accessToken);
+            // return;
+        }
+
         var params = {
           Attributes: module.exports.serialize({ /* required */
             timestamp: [Date.now().toString(), true],
@@ -561,10 +568,10 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
         if (err) {
-            console.log('error creating database');
+            console.log('error creating reversi-invite domain');
             console.log(JSON.stringify(err));
-            callback({error: JSON.stringify(err)});
-            return;
+            // callback({error: JSON.stringify(err)});
+            // return;
         }
 
         db.getAttributes({
@@ -699,9 +706,10 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err != null) {
+            console.log('error creating reversi-user domain');
             console.log(JSON.stringify(err));
-            callback(err);
-            return;
+            // callback(err);
+            // return;
         }
 
         db.getAttributes({
@@ -736,9 +744,10 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
         if (err) {
+            console.log('error creating reversi-user domain');
             console.log(JSON.stringify(err));
-            callback(err);
-            return;
+            // callback(err);
+            // return;
         }
 
         db.deleteAttributes({
