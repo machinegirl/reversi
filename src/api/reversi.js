@@ -34,7 +34,7 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
             module.exports.createUser(idToken, null, callback, (accessToken) => {
                 callback2(accessToken);
                 return;
-            })
+            });
         });
         return;
     }
@@ -74,7 +74,7 @@ module.exports.makeAccessToken = function(idToken) {
     };
 
     var accessToken = jwt.sign(claims, cert, options);
-    return accessToken
+    return accessToken;
 };
 
 module.exports.createUser = function(idToken, invite, callback, callback2) {
