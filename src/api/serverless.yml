@@ -17,13 +17,10 @@ provider:
     name: aws
     runtime: nodejs4.3
     apiKeys:
-        - reversi-dev
+        - reversi-${opt:stage}
     timeout: 300
-
-# you can overwrite defaults here
-#defaults:
-#  stage: dev
-#  region: us-east-1
+    stage: dev
+    region: us-east-1
 
 # you can add packaging information here
 #package:

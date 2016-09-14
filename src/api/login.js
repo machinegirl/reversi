@@ -8,4 +8,4 @@ module.exports.handler = (e, ctx, callback) => {
             'accessToken': accessToken
         });
     });
-}
+};

@@ -83,7 +83,7 @@ module.exports.makeAccessToken = function(idToken) {
     var accessToken = jwt.sign(claims, cert, options);
     console.log('accessToken');
     console.log(accessToken);
-    return accessToken
+    return accessToken;
 };
 
 module.exports.createUser = function(idToken, invite, callback, callback2) {
