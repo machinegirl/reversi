@@ -30,7 +30,10 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
             });
         });
     } else {    // Sign in to reversi with google
+        console.log('sign in to reversi');
         module.exports.googleSignIn(e, ctx, callback, (idToken) => {
+            console.log('sign in success');
+            console.log(idToken);
             module.exports.createUser(idToken, null, callback, (accessToken) => {
                 callback2(accessToken);
                 return;
@@ -74,6 +77,8 @@ module.exports.makeAccessToken = function(idToken) {
     };
 
     var accessToken = jwt.sign(claims, cert, options);
+    console.log('accessToken');
+    console.log(accessToken);
     return accessToken
 };
 
@@ -85,10 +90,13 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
 
     var friends = [];
     var games = [];
+    console.log('invite');
+    console.log(invite)
     if (invite != null) {
         friends = [invite.inviter];
         games = [invite.game];
     }
+
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
@@ -203,29 +211,31 @@ module.exports.cleanBlacklist = function(callback) {
 };
 
 module.exports.googleSignIn = function(e, ctx, callback, callback2) {
-    var idToken = e.body;
-    var idToken = [];
+    console.log(e);
+    var idToken = e.idToken;
+    var body = [];
 
     https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + idToken, function(res) {
 
         res.on('data', function(chunk) {
-            idToken.push(chunk);
+            body.push(chunk);
         }).on('end', function() {
 
             if (res.statusCode === 200) {
-                idToken = Buffer.concat(idToken).toString();
-                idToken = JSON.parse(idToken);
+                body = Buffer.concat(body).toString();
+                body = JSON.parse(body);
 
                 var key = JSON.parse(fs.readFileSync('keys/googleIdentityPlatform.key'));
 
-                if (key.length > 0 && idToken.aud !== key) {
+                if (key.length > 0 && body.aud !== key) {
                     callback({error: 'idToken aud claim is incorrect'});
                     return;
                 }
-                callback2(idToken);
+                callback2(body);
                 return;
 
             } else {
+                console.log('status code not 200');
                 callback({error: JSON.stringify(res.statusCode)});
                 return;
             }
