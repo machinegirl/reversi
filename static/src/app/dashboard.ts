@@ -36,12 +36,17 @@ export class Dashboard implements OnInit {
                     return;
                 };
 
-                // TODO: GET /user
+                // GET /user
                 this.reversiService.getUser(accessToken, (res) => {
-                    // Set view vars from res.
-                });
 
-                // TODO: GET /friend?id=[23423432, 76765645, etc.]
+                    // TODO: Set view vars from res.
+
+                    // GET /friend?id=[23423432, 76765645, etc.]
+                    this.reversiService.getFriend(accessToken, res.friends, (res) => {
+
+                        // TODO: Set view vars from res.
+                    });
+                });
             });
         });
 	}
