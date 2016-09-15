@@ -863,6 +863,7 @@ module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
 
     var names = "'" + friends[0] + "', ";
     for (var i = 1; i < friends.length-1; i++) {
+        // TODO: only add friend if friendship is mutual.
         names += "'" + friends[i] + "', ";
     }
     names += "'" + friends[friends.length-1] + "'";

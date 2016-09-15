@@ -42,7 +42,7 @@ export class Dashboard implements OnInit {
                     // TODO: Set view vars from res.
 
                     // GET /friend?id=[23423432, 76765645, etc.]
-                    this.reversiService.getFriend(accessToken, res.friends, (res) => {
+                    this.reversiService.getFriend(accessToken, res.friend, (res) => {
 
                         // TODO: Set view vars from res.
                     });
