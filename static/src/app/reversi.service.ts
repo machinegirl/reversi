@@ -325,20 +325,20 @@ export class ReversiService {
 			let accessToken = localStorage.getItem('reversiAccessToken');
 
 			this.apiReq(RequestMethod.Put, '/refresh_login', accessToken, null, null, (res, err) => {
-				if (err != null) {
+				if (err != null || !res.success) {
 					console.log('API Request Error:');
 					console.log(err);
-					return;
-				}
-
-				console.log('refresh token success: ' + res.success);
-				console.log('new access token: ' + res.accessToken);
-				if (!res.success) {	// TODO: Can we move this into the if err != null above?
 					localStorage.removeItem('reversiAccessToken');
 					window.location.assign('/');
 					return;
 				}
-				window.setTimeout(refresh, 1000 * 60 * 55);		// TODO: Call 5 minutes before token expires
+				console.log('refresh token success: ' + res.success);
+				console.log('new access token: ' + res.accessToken);
+				decoded = this.jwtHelper.decodeToken(accessToken);
+				now = Math.floor(Date.now()/1000);
+				timeout = ((decoded.exp - now) * 1000) - (1000 * 60 * 5);
+				timeout = timeout < 0 ? 0 : timeout;
+				window.setTimeout(refresh, timeout);		// TODO: Call 5 minutes before token expires
 				localStorage.setItem('reversiAccessToken', res.accessToken);
 			});
 		};
