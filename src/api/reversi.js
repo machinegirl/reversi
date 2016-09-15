@@ -861,6 +861,8 @@ module.exports.unserial = function(attr) {
             // console.log('type: ' + typeof obj[attr[i].Name]);
             // console.log('value: ' + obj[attr[i].Name]);
             if (obj[attr[i].Name].constructor === Array) {
+                console.log('array: ' + JSON.stringify(obj[attr[i].Name]));
+                console.log('pushing into array: ' + val);
                 obj[attr[i].Name].push(val);
             } else {
                 // console.log('key: ' + attr[i].Name);
@@ -870,7 +872,7 @@ module.exports.unserial = function(attr) {
                 console.log('try to add at key: ' + attr[i].Name + ' value:');
                 console.log(newVal);
                 obj[attr[i].Name] = newVal;
-                // console.log(obj[attr[i].Name]);
+                console.log('obj after add: ' + JSON.stringify(obj[attr[i].Name]));
                 // console.log(typeof obj[attr[i].Name])
             }
         }
