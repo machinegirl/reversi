@@ -193,7 +193,23 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
-
+    getFriend:
+        handler: friend.get
+        events:
+            - http:
+                path: friend
+                method: get
+                private: true
+                cors:
+                    origins:
+                        - '*'
+                    headers:
+                        - Content-Type
+                        - X-Amz-Date
+                        - Authorization
+                        - X-Api-Key
+                        - X-Amz-Security-Token
+                        - X-Reversi-Auth
 #     - s3: ${bucket}
 #     - schedule: rate(10 minutes)
 #     - sns: greeter-topic

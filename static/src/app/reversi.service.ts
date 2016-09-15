@@ -407,6 +407,17 @@ export class ReversiService {
 		});
 	}
 
+	getFriend(accessToken, friends, callback) {
+		this.apiReq(RequestMethod.Get, '/friend?friend=' + JSON.stringify(friends), accessToken, null, null, (res, err) => {
+			if (err != null) {
+				console.log('API Request error:');
+				console.log(err);
+				return;
+			}
+			callback(res);
+		});
+	}
+
 	// Make an API request
 	apiReq(method, endpoint, accessToken, headers, body, callback) {
 

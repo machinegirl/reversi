@@ -171,6 +171,7 @@ module.exports.cleanBlacklist = function(callback) {
         if (err) {
             console.log('error on first select');
             console.log(err, err.stack); // an error occurred
+            return;
         } else {
             // console.log('Check timestamp here');
             console.log('data: ' + JSON.stringify(data));  // successful response
@@ -744,8 +745,8 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
                 callback({error: err});
                 return;
             }
-            // TODO: data appears to have two Name: 'games' entries in it. The second one is an empty array and is wiping out the first populated array.
-            console.log('getUser data: ' + JSON.stringify(data));
+
+            // console.log('getUser data: ' + JSON.stringify(data));
             callback2(module.exports.unserial(data.Attributes));
         });
 
@@ -786,6 +787,52 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
             callback2();
         });
     });
+};
+
+module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
+
+    if (e.query == null || e.query.friend == null) {
+        console.log('Error: Missing friend query param');
+        callback({error: 'missing friend query param'});
+        return;
+    }
+
+    var friends = JSON.parse(e.query.friend);
+
+    var db = module.exports.db;
+
+    var names = "'" + friends[0] + "', ";
+    for (var i = 1; i < friends.length-1; i++) {
+        names += "'" + friends[i] + "', ";
+    }
+    names += "'" + friends[friends.length-1] + "'";
+    var res = [];
+
+    var f = (nextToken) => {
+        var params = {
+          SelectExpression: "select * from `reversi-friend` where itemName() in (" + names + ")", /* required */
+        };
+
+        if (nextToken) {
+            params.NextToken = nextToken;
+        }
+
+        db.select(params, function(err, data) {
+            if (err) {
+                console.log('error on first select');
+                console.log(err, err.stack); // an error occurred
+                return;
+            }
+
+            console.log('select from reversi-friend data: ' + JSON.stringify(data));
+            // res.push(module.exports.unserial(data.Attributes));
+
+            if ('NextToken' in data) {
+                f(data.NextToken);
+                return;
+            }
+        });
+    };
 };
 
 module.exports.serialize = function(obj) {
