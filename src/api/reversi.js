@@ -904,7 +904,9 @@ module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
 
             var res2 = [];
             for (var i = 0; i < res.length; i++) {
-                res2.push({res[i].Name: module.exports.unserial(res[i].Attributes}));
+                var obj = {};
+                obj[res[i].Name] = module.exports.unserial(res[i].Attributes);
+                res2.push(obj);
             }
 
             callback2(res2);
