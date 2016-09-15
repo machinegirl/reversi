@@ -84,7 +84,7 @@ module.exports.makeAccessToken = function(idToken) {
     };
 
     var accessToken = jwt.sign(claims, cert, options);
-    console.log('accessToken');
+    console.log('makeAccessToken accessToken:');
     console.log(accessToken);
     return accessToken;
 };
@@ -301,7 +301,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
 
 
-    console.log('!! ' + JSON.stringify(e));
+    console.log('logged_in e: ' + JSON.stringify(e));
 
     var accessToken = e.headers['X-Reversi-Auth'].split(' ')[1];
     var cert = fs.readFileSync('keys/accessTokenKey.pem.pub'); // get public key
@@ -310,7 +310,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         audience: apiConf.api_prefix + apiConf.api_stage,
         issuer: apiConf.api_prefix + apiConf.api_stage
     }
-    console.log('accessToken');
+    console.log('logged_in accessToken:');
     console.log(accessToken);
     var decoded = jwt.verify(accessToken, cert, options, (err, accessToken) => {
         if (err !== null) {
@@ -328,14 +328,15 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         };
         db.getAttributes(params, (err, data) => {
           if (err) {
-              console.log(JSON.stringify(err, true)); // an error occurred
+              console.log(JSON.stringify(err)); // an error occurred
               callback({error: JSON.stringify(err)});
               return;
           } else {
-              console.log(data);           // successful response
+              console.log('reversi-blacklist data: ' + JSON.stringify(data));           // successful response
               if ('Attributes' in data) {
-                  console.log(JSON.stringify(err));
-                  callback(err);
+                  var errMsg = 'logged_in failed: accessToken found in blacklist';
+                  console.log(JSON.stringify(errMsg));
+                  callback({error: errMsg});
                   return;
               }
               callback2(accessToken);
@@ -791,27 +792,37 @@ module.exports.deleteUser = function(e, ctx, callback, accessToken, callback2) {
 
 module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
 
+    console.log('getFriend');
+
     if (e.query == null || e.query.friend == null) {
         console.log('Error: Missing friend query param');
         callback({error: 'missing friend query param'});
         return;
     }
 
-    var friends = JSON.parse(e.query.friend);
-
     var db = module.exports.db;
 
-    var names = "'" + friends[0] + "', ";
-    for (var i = 1; i < friends.length-1; i++) {
-        // TODO: only add friend if friendship is mutual.
-        names += "'" + friends[i] + "', ";
+    var friends = JSON.parse(e.query.friend);
+
+    console.log('query.friend: ' + e.query.friend);
+    console.log('friends:');
+    console.log(friends);
+
+    var names = "'" + friends[0] + '-' + accessToken.sub + "', ";
+    if (friends.length > 2) {
+        for (var i = 1; i < friends.length-1; i++) {
+            names += "'" + friends[i] + '-' + accessToken.sub + "', ";
+        }
     }
-    names += "'" + friends[friends.length-1] + "'";
+    names += "'" + friends[friends.length-1] + '-' + accessToken.sub + "'";
+
+    console.log('names: ' + names);
+
     var res = [];
 
     var f = (nextToken) => {
         var params = {
-          SelectExpression: "select * from `reversi-user` where itemName() in (" + names + ")", /* required */
+          SelectExpression: "select * from `reversi-friend` where itemName() in (" + names + ")", /* required */
         };
 
         if (nextToken) {
@@ -828,12 +839,113 @@ module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
             console.log('select from reversi-friend data: ' + JSON.stringify(data));
             // res.push(module.exports.unserial(data.Attributes));
 
+            if ('Items' in data) {
+                res = res.concat(data.Items);
+            }
+
             if ('NextToken' in data) {
                 f(data.NextToken);
                 return;
             }
+
+            callback2(module.exports.unserial(res));
         });
-    };
+    }
+    f();
+
+    // Make a list of mutual friendships
+    // var mutual = [];
+    // for (var i = 0; i < friends.length; i++) {
+
+        // console.log('iter: ' + i);
+
+        // ((i, callback3) => {
+
+            // console.log('iter func: ' + i);
+
+            // var friend = friends[i];
+
+            // db.getAttributes({
+            //     DomainName: 'reversi-friend',
+            //     ItemName: friend + '-' + accessToken.sub
+            // }, (err, data) => {
+            //     if (err) {
+            //         console.log(JSON.stringify(err))
+            //         callback({error: err});
+            //         return;
+            //     }
+            //
+            //     // Only add friend if friendship is mutual.
+            //     if ('Attributes' in data) {
+            //         console.log('mutual friendship');
+            //         mutual.push(friend);
+            //     }
+            //
+            //     if (i >= friends.length-1) {
+            //         console.log('last iter');
+            //         callback3(mutual);
+            //         return;
+            //     }
+            //     // console.log('getFriend data: ' + JSON.stringify(data));
+            //     // callback2(module.exports.unserial(data.Attributes));
+            // });
+        // })(i, (mutual) => {
+        //     // if (i >= friends.length-1) {
+        //
+        //         console.log('callback3');
+        //         console.log('mutual: ' + JSON.stringify(mutual));
+        //
+        //         var names = "'" + mutual[0] + "', ";
+        //         for (var i = 1; i < mutual.length-1; i++) {
+        //
+        //             names += "'" + mutual[i] + "', ";
+        //         }
+        //         names += "'" + mutual[mutual.length-1] + "'";
+        //
+        //         console.log('names: ' + names);
+        //
+        //         var res = [];
+        //
+        //         var f = (nextToken, callback) => {
+        //
+        //             console.log('f');
+        //
+        //             var params = {
+        //               SelectExpression: "select * from `reversi-friend` where itemName() in (" + names + ")", /* required */
+        //             };
+        //
+        //             if (nextToken) {
+        //                 params.NextToken = nextToken;
+        //             }
+        //
+        //             db.select(params, function(err, data) {
+        //                 if (err) {
+        //                     console.log('error on first select');
+        //                     console.log(err, err.stack); // an error occurred
+        //                     return;
+        //                 }
+        //
+        //                 console.log('select from reversi-friend data: ' + JSON.stringify(data));
+        //                 // res.push(module.exports.unserial(data.Attributes));
+        //
+        //                 res.concat(data);
+        //
+        //                 if ('NextToken' in data) {
+        //                     f(data.NextToken);
+        //                     return;
+        //                 }
+        //
+        //                 callback2(res);
+        //             });
+        //         };
+        //
+        //         f();
+            // }
+    //
+    //     });
+    // }
+
+
 };
 
 module.exports.serialize = function(obj) {
