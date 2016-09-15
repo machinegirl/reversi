@@ -429,13 +429,27 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
             db.putAttributes(params, (err, data) => {
                 if (err) {
                     console.log(JSON.stringify(err)); // an error occurred
-                    callback(err);
+                    callback({error: err});
                     return;
                 } else {
-                    // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
-
-                    callback2({id: id});
-                    return;
+                    db.putAttributes({
+                        DomainName: 'reversi-user',
+                        ItemName: accessToken.sub,
+                        Attributes: module.exports.serialize({
+                            game: [id, false]
+                        })
+                    }, (err, data) => {
+                        if (err) {
+                            console.log(JSON.stringify(err)); // an error occurred
+                            callback({error: err});
+                            return;
+                        }
+                        // Publish a message on PubNub channel game-<game ID here>, the message should announce that this game has just been created, along with a timestamp.
+                        module.exports.publish(e, ctx, callback, 'game-' + id, {msg: 'player ' + accessToken.sub + ' created game ' + id + ' at timestamp ' + Date.now()}, () => {
+                            callback2({id: id});
+                            return;
+                        });
+                    })
                 }
             });
 
@@ -466,20 +480,18 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
                 console.log(JSON.stringify(game));
                 // If user sub claim is not found in players array, return an error and return from this function.
                 var validPlayer = false;
-                for (i = 0; i < game.players.length; i++) {
-                    if (accessToken.sub === game.players[i]) {
-                        validPlayer = true;
-                    }
+                if (accessToken.sub === game['player-0'] || accessToken.sub === game['player-1']) {
+                    validPlayer = true;
                 }
                 if (!validPlayer) {
-                    callback('player is not in players array');
+                    callback('player is not valid');
                     return;
                 }
 
 
                 // Return the Game object to the client.
                 module.exports.publish(e, ctx, callback, 'game-' + id, {msg: 'player ' + accessToken.sub + ' is active on game ' + id}, () => {
-                    callback(null, {id: id, game: game});
+                    callback2({id: id, game: game});
                 });
             })
         }
