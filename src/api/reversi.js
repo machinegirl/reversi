@@ -19,7 +19,7 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
     var db = module.exports.db;
 
     if (accessToken != null) {   // Refresh token
-        module.exports.refreshToken(e, ctx, accessToken, callback, (accessToken) => {
+        module.exports.refreshToken(e, ctx, callback, accessToken, (accessToken) => {
             callback2(accessToken);
             return;
         });
@@ -223,8 +223,15 @@ module.exports.cleanBlacklist = function(callback) {
 
             };
             if ('Items' in data) {
+                console.log('data to delete:');
+                console.log(data.Items);
                 deleteItems(data);
                 callback();
+                return;
+            } else {
+                console.log('blacklist clean!');
+                callback();
+                return;
             }
         }
     });
@@ -268,13 +275,11 @@ module.exports.googleSignIn = function(e, ctx, callback, callback2) {
     });
 };
 
-module.exports.refreshToken = function(e, ctx, accessToken, callback, callback2) {
+module.exports.refreshToken = function(e, ctx, callback, accessToken, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
 
     var db = module.exports.db;
-
-    accessToken = module.exports.makeAccessToken(accessToken);
 
     db.createDomain({DomainName: 'reversi-blacklist'}, (err, data) => {
 
@@ -289,7 +294,9 @@ module.exports.refreshToken = function(e, ctx, accessToken, callback, callback2)
         module.exports.cleanBlacklist(() => {
             console.log('blacklisting token');
             // Blacklist Token
-            module.exports.logout(e, ctx, callback, (data) => {
+            module.exports.logout(e, ctx, callback, accessToken, (data) => {
+                accessToken = module.exports.makeAccessToken(accessToken);
+                console.log('successful logout');
                 callback2(accessToken);
             });
         })
@@ -310,7 +317,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         audience: apiConf.api_prefix + apiConf.api_stage,
         issuer: apiConf.api_prefix + apiConf.api_stage
     }
-    console.log('accessToken');
+    console.log('logged_in accessToken');
     console.log(accessToken);
     var decoded = jwt.verify(accessToken, cert, options, (err, accessToken) => {
         if (err !== null) {
@@ -347,31 +354,27 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
 
 module.exports.logout = function(e, ctx, callback, accessToken, callback2) {
 
-
+    console.log('logging out: ' + accessToken.jti);
 
     var db = module.exports.db;
     params = {
-      Attributes: [ /* required */
+        DomainName: 'reversi-blacklist',
+        ItemName: accessToken.jti,
+        Attributes: [
         {
-          Name: 'timestamp', /* required */
-          Value: Date.now().toString(), /* required */
+          Name: 'timestamp',
+          Value: Date.now().toString(),
           Replace: true
         },
-        /* more items */
       ],
-      DomainName: 'reversi-blacklist', /* required */
-      ItemName: accessToken.jti, /* required */
-    //   Expected: {
-    //     Exists: true || false,
-    //     Name: 'STRING_VALUE',
-    //     Value: 'STRING_VALUE'
-    //   }
     };
     db.putAttributes(params, (err, data) => {
       if (err) {
-          console.log(err, err.stack); // an error occurred
+          console.log(JSON.stringify(err));
+          callback({error: err});
+          return;
       } else {
-          console.log(data);  // successful response
+        //   console.log(data);  // successful response
           callback2(data);
       }
     });
@@ -580,9 +583,6 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
           }
         });
     });
-
-
-    // TODO: Implement PUT /invite route, which will be called by client code from the GET /invite route after the user successfully signs in with Google.
 };
 
 module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
