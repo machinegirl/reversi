@@ -95,15 +95,21 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
 
     var db = module.exports.db;
 
-    var friends = [];
-    var games = [];
     console.log('createUser invite');
     console.log(invite)
+
+    var user = {
+        name: [idToken.name, true],
+        email: [idToken.email, true],
+    };
+
     if (invite != null) {
-        friends = [invite.inviter];
-        games = [invite.game];
+        user['friend'] = [invite.inviter, false];
+        user['game'] = [invite.game, false];
     }
 
+    console.log('user');
+    console.log(user);
 
     db.createDomain({DomainName: 'reversi-user'}, (err, data) => {
 
@@ -114,18 +120,10 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
             // return;
         }
 
-        db.putAttributes({
+        db.putAttributes({ // Update the user's name and email in our database
             DomainName: 'reversi-user',
             ItemName: idToken.sub,
-            Attributes: module.exports.serialize({
-                name: [idToken.name, false],
-                email: [idToken.email, false],
-                games: [games, false],
-                new: [true, false],
-                games_played: [0, false],
-                games_won: [0, false],
-                friends: [friends, false]
-            })
+            Attributes: module.exports.serialize(user),
         }, (err, data) => {
             if (err) {
                 console.log('error creating user');
@@ -133,8 +131,23 @@ module.exports.createUser = function(idToken, invite, callback, callback2) {
                 callback(err);
                 return;
             }
-            var accessToken = module.exports.makeAccessToken(idToken);
-            callback2(accessToken);
+            console.log(data);
+            db.putAttributes({ // add some new user state if it doesn't exist
+                DomainName: 'reversi-user',
+                ItemName: idToken.sub,
+                Attributes: module.exports.serialize({
+                    new: [true, true],
+                    games_played: [0, true],
+                    games_won: [0, true]
+                }),
+                Expected: {
+                    Exists: false,
+                    Name: 'new'
+                }
+            }, (err, data) => {
+                var accessToken = module.exports.makeAccessToken(idToken);
+                callback2(accessToken);
+            });
         });
     });
 
@@ -389,24 +402,21 @@ module.exports.game = function(e, ctx, callback, accessToken, callback2) {
             console.log('game: ' + id);
 
             // Put a new Item into SimpleDB, with the correct attributes for a new game.
-            var gameBoard = [];
+            var game = {
+                'player-0': [accessToken.sub, true],
+                player_turn: [0, true],
+                status: [0, true],
+                'pieces-0': [32, true],
+                'pieces-1': [32, true]
+            };
             for (var i = 0; i < 8; i++) {
-                var row = [];
                 for (var j = 0; j < 8; j++) {
-                    row.push(0);
+                    game['board-' + i + '-' + j] = [0, true];
                 }
-                gameBoard.push(row);
             }
 
             console.log(accessToken.name);
-            var attrs = module.exports.serialize({
-                'board': [gameBoard, false],
-                'players': [[accessToken.sub], false],
-                'names': [[accessToken.name], false],
-                'player_turn': [0, false],
-                'status': [0, false],
-                'pieces': [[32, 32], false]
-            });
+            var attrs = module.exports.serialize(game);
             console.log('!!attrs');
             console.log(attrs);
 
@@ -604,7 +614,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                         DomainName: 'reversi-game',
                         ItemName: invite.game,
                         Attributes: module.exports.serialize({
-                                players: [[invite.inviter, idToken.sub], true]
+                                'player-1': [idToken.sub, false]
                             })
                         }, (err, data) => {
                             if (err) {
@@ -625,6 +635,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                 })
 
             } else {
+                console.log('invitation not found');
                 callback({error: 'invitation not found'});
             }
         });
@@ -637,7 +648,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
 
     var db = module.exports.db;
 
-    db.deleteDomain({DomainName: 'reversi-friend'}, (err, data) => {
+    db.createDomain({DomainName: 'reversi-friend'}, (err, data) => {
         if (err) {
             console.log('failed to delete reversi-friend');
             console.log(JSON.stringify(err));
@@ -722,7 +733,7 @@ module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
                 return;
             }
             // TODO: data appears to have two Name: 'games' entries in it. The second one is an empty array and is wiping out the first populated array.
-            console.log('getUser data: ' + data);
+            console.log('getUser data: ' + JSON.stringify(data));
             callback2(module.exports.unserial(data.Attributes));
         });
 

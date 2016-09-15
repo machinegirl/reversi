@@ -34,13 +34,11 @@ export class Main implements OnInit {
                     this.reversiService.acceptInvite(idToken, inviteCode, (res, err) => {
                         if (err != null) {
                             console.log(err);
-                            localStorage.setItem('reversiAccessToken', res.accessToken);
-                            // window.location.assign('/play?id=' + res.invite.game);
                             return;
                         }
-                        // else {
-                            console.log(res);
-                        // }
+                        console.log(res);
+                        localStorage.setItem('reversiAccessToken', res.accessToken);
+                        window.location.assign('/play?game=' + res.invite.game);
 
                     });
                }).bind(this);
