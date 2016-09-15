@@ -852,6 +852,13 @@ module.exports.unserial = function(attr) {
     var obj = {};
 
     for (var i = 0; i < attr.length; i++) {
+        if (attr[i].Name in obj) {
+            if (typeof obj[attr[i].Name] === Array) {
+                obj[attr[i].Name].push(attr[i].Value);
+            } else {
+                obj[attr[i].Name] = [obj[attr[i].Value], attr[i].Value];
+            }
+        }
         obj[attr[i].Name] = JSON.parse(attr[i].Value);
     }
     return obj;
