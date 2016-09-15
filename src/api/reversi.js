@@ -875,8 +875,9 @@ module.exports.unserial = function(attr) {
                 console.log('obj after add: ' + JSON.stringify(obj[attr[i].Name]));
                 // console.log(typeof obj[attr[i].Name])
             }
+        } else {
+            obj[attr[i].Name] = val;
         }
-        obj[attr[i].Name] = val;
     }
     return obj;
 };
