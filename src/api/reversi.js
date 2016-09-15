@@ -730,7 +730,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                         return;
                     });
                 } else { // Make new inviteeInviter
-                    module.exports.getUserbySub(invite.inviter, callback, (user) => {
+                    module.exports.getUserBySub(invite.inviter, callback, (user) => {
                         db.putAttributes({
                             DomainName: 'reversi-friend',
                             ItemName: idToken.sub + '-' + invite.inviter,
@@ -753,7 +753,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                     });
                 }
             } else { // Make new inviterInvitee and inviteeInviter
-                module.exports.getUserbySub(invite.inviter, callback, (user) => {
+                module.exports.getUserBySub(invite.inviter, callback, (user) => {
                     db.batchPutAttributes({
                         DomainName: 'reversi-friend',
                         Items: [
@@ -793,7 +793,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
 };
 
 module.exports.getUser = function(e, ctx, callback, accessToken, callback2) {
-    module.exports.getUserbySub(accessToken.sub, callback, callback2);
+    module.exports.getUserBySub(accessToken.sub, callback, callback2);
 };
 
 module.exports.getUserBySub = function(sub, callback, callback2) {
