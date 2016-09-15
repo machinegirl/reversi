@@ -851,16 +851,30 @@ module.exports.serialize = function(obj) {
 
 module.exports.unserial = function(attr) {
     var obj = {};
-
+    console.log('unserial');
     for (var i = 0; i < attr.length; i++) {
+        var val = JSON.parse(attr[i].Value);
+        console.log('object on iteration ' + i);
+        console.log(obj)
         if (attr[i].Name in obj) {
-            if (typeof obj[attr[i].Name] === 'Array') {
-                obj[attr[i].Name].push(attr[i].Value);
+            // console.log('found duplicate key: ' + attr[i].Name);
+            // console.log('type: ' + typeof obj[attr[i].Name]);
+            // console.log('value: ' + obj[attr[i].Name]);
+            if (obj[attr[i].Name].constructor === Array) {
+                obj[attr[i].Name].push(val);
             } else {
-                obj[attr[i].Name] = [obj[attr[i].Value], attr[i].Value];
+                // console.log('key: ' + attr[i].Name);
+                // console.log('previous value: ' + obj[attr[i].Name]);
+                // console.log('new value: ' + attr[i].Value);
+                var newVal = [obj[attr[i].Name], val];
+                console.log('try to add at key: ' + attr[i].Name + ' value:');
+                console.log(newVal);
+                obj[attr[i].Name] = newVal;
+                // console.log(obj[attr[i].Name]);
+                // console.log(typeof obj[attr[i].Name])
             }
         }
-        obj[attr[i].Name] = JSON.parse(attr[i].Value);
+        obj[attr[i].Name] = val;
     }
     return obj;
 };
