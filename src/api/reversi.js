@@ -959,14 +959,14 @@ module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
                         return;
                     }
 
-                    var res3 = [];
+                    var res3 = {};
 
                     for (var i = 0; i < res2.length; i++) {
 
                         if ('Attributes' in res2[i]) {
-                            var obj = {};
-                            obj[res2[i].Name] = module.exports.unserial(res2[i].Attributes);
-                            res3.push(obj);
+                            // var obj = {};
+                            res3[res2[i].Name.split('-')[1]] = module.exports.unserial(res2[i].Attributes);
+                            // res3.push(obj);
                         }
                     }
 
@@ -977,100 +977,6 @@ module.exports.getFriend = function(e, ctx, callback, accessToken, callback2) {
         });
     }
     f();
-
-    // Make a list of mutual friendships
-    // var mutual = [];
-    // for (var i = 0; i < friends.length; i++) {
-
-        // console.log('iter: ' + i);
-
-        // ((i, callback3) => {
-
-            // console.log('iter func: ' + i);
-
-            // var friend = friends[i];
-
-            // db.getAttributes({
-            //     DomainName: 'reversi-friend',
-            //     ItemName: friend + '-' + accessToken.sub
-            // }, (err, data) => {
-            //     if (err) {
-            //         console.log(JSON.stringify(err))
-            //         callback({error: err});
-            //         return;
-            //     }
-            //
-            //     // Only add friend if friendship is mutual.
-            //     if ('Attributes' in data) {
-            //         console.log('mutual friendship');
-            //         mutual.push(friend);
-            //     }
-            //
-            //     if (i >= friends.length-1) {
-            //         console.log('last iter');
-            //         callback3(mutual);
-            //         return;
-            //     }
-            //     // console.log('getFriend data: ' + JSON.stringify(data));
-            //     // callback2(module.exports.unserial(data.Attributes));
-            // });
-        // })(i, (mutual) => {
-        //     // if (i >= friends.length-1) {
-        //
-        //         console.log('callback3');
-        //         console.log('mutual: ' + JSON.stringify(mutual));
-        //
-        //         var names = "'" + mutual[0] + "', ";
-        //         for (var i = 1; i < mutual.length-1; i++) {
-        //
-        //             names += "'" + mutual[i] + "', ";
-        //         }
-        //         names += "'" + mutual[mutual.length-1] + "'";
-        //
-        //         console.log('names: ' + names);
-        //
-        //         var res = [];
-        //
-        //         var f = (nextToken, callback) => {
-        //
-        //             console.log('f');
-        //
-        //             var params = {
-        //               SelectExpression: "select * from `reversi-friend` where itemName() in (" + names + ")", /* required */
-        //             };
-        //
-        //             if (nextToken) {
-        //                 params.NextToken = nextToken;
-        //             }
-        //
-        //             db.select(params, function(err, data) {
-        //                 if (err) {
-        //                     console.log('error on first select');
-        //                     console.log(err, err.stack); // an error occurred
-        //                     return;
-        //                 }
-        //
-        //                 console.log('select from reversi-friend data: ' + JSON.stringify(data));
-        //                 // res.push(module.exports.unserial(data.Attributes));
-        //
-        //                 res.concat(data);
-        //
-        //                 if ('NextToken' in data) {
-        //                     f(data.NextToken);
-        //                     return;
-        //                 }
-        //
-        //                 callback2(res);
-        //             });
-        //         };
-        //
-        //         f();
-            // }
-    //
-    //     });
-    // }
-
-
 };
 
 module.exports.serialize = function(obj) {
