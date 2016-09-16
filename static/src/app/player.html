@@ -1,6 +1,20 @@
 <player class="player">
 	<div class="player_info">
-		player info goes here
+		<h3> You </h3>
+		<p>{{ reversiService.name }} ({{ reversiService.email }})</p>
+		<p>Games Played: {{ reversiService.gamesPlayed }}</p>
+		<p>Games Won: {{ reversiService.gamesWon }}</p>
+		<p>Number of Friends: {{ reversiService.numFriends }}</p>
+	</div>
+	<div class="player_info">
+		<h3>Your Friends</h3>
+		<p *ngIf="!reversiService.friends || reversiService.friends.length === 0">Start a new game and invite someone to play with you. If they accept, they'll become your friend.</p>
+		<div *ngFor="#friend of reversiService.friends">
+			<p> {{ friend.name }} ({{ friend.email }}) </p>
+			<p> Games Played: {{ friend.play_count }} <button>Invite to Play</button> </p>
+			<p> Games Won: {{ friend.wins }} </p>
+		</div>
+		<!-- <p>Games Played: {{ reversiService.gamesPlayed }}</p> -->
 	</div>
 	<div class="score" *ngIf="path === '/play'">
 		score goes here

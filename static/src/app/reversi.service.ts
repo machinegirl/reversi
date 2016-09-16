@@ -21,6 +21,12 @@ export class ReversiService {
 	apiConfLoaded: boolean;
 	pubnubConfLoaded: boolean;
 	googleIdentityPlatformKeyLoaded: boolean;
+	name: string;
+	email: string;
+	gamesPlayed: number;
+	gamesWon: number;
+	numFriends: number;
+	friends: any;
 
 	constructor(public http: Http) {
 

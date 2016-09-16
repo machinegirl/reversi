@@ -762,7 +762,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                                 })
                             },
                             {
-                                ItemName: idToken.sub + '-' + invite.inviter,
+                                Name: idToken.sub + '-' + invite.inviter,
                                 Attributes: module.exports.serialize({
                                     name: [user.name, true],
                                     email: [user.email, true],
