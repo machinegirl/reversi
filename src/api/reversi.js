@@ -15,7 +15,6 @@ module.exports.login = function(e, ctx, callback, accessToken, callback2) {
     var apiConf = JSON.parse(fs.readFileSync('keys/api.conf'));
     var gcpConf = JSON.parse(fs.readFileSync('keys/googleCloudPlatform.conf'));
 
-
     var db = module.exports.db;
 
     if (accessToken != null) {   // Refresh token
@@ -84,8 +83,8 @@ module.exports.makeAccessToken = function(idToken) {
     };
 
     var accessToken = jwt.sign(claims, cert, options);
-    console.log('makeAccessToken accessToken:');
-    console.log(accessToken);
+    // console.log('makeAccessToken accessToken:');
+    // console.log(accessToken);
     return accessToken;
 };
 
