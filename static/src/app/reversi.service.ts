@@ -2,7 +2,9 @@ import { Injectable} from '@angular/core';
 import {JwtHelper} from 'angular2-jwt';
 import { Http, Response, Headers, RequestMethod, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
+import {Location} from '@angular/common';
 
+declare var PubNub: any;
 
 @Injectable()
 export class ReversiService {
@@ -27,8 +29,12 @@ export class ReversiService {
 	gamesWon: number;
 	numFriends: number;
 	friends: any;
+	status: any;
+	pubnub: any;
+	pubnub2: any;
 
-	constructor(public http: Http) {
+
+	constructor(public http: Http, private location: Location) {
 
 	}
 
@@ -180,6 +186,85 @@ export class ReversiService {
 	    if (!results[2]) return '';
 	    return decodeURIComponent(results[2].replace(/\+/g, " "));
 	}
+
+	play() {
+		let accessToken = localStorage.getItem('reversiAccessToken');
+		if (typeof accessToken === 'undefined' || accessToken === null) {
+			window.location.assign('/');
+			return;
+		}
+
+		this.loggedIn(accessToken, (loggedIn) => {
+			if (!loggedIn) {
+				window.location.assign('/');
+				return;
+			}
+
+			this.pubnub = new PubNub({
+				subscribeKey: this.pubnubSubscribeKey
+			});
+
+			this.pubnub.addListener({
+				status: (function(statusEvent) {
+					if (statusEvent.category === 'PNConnectedCategory') {
+
+					}
+				}).bind(this),
+				message: (function(message) {
+					console.log('New Message!!', message);
+				}).bind(this),
+				presence: (function(presenceEvent) {
+
+				}).bind(this)
+			});
+
+
+			let game = this.getParameterByName('game', false);
+			let endpoint = (game == null) ? '/game' : '/game?game=' + game;
+
+			this.apiReq(RequestMethod.Get, endpoint, accessToken, null, null, (res, err) => {
+				if (err != null) {
+					console.log('API Request Error:');
+					console.log(err);
+					return;
+				}
+			  //   this.reversiService.loadGame(game);
+				let id = res.id;
+				this.location.replaceState('/play', 'game='+id);
+				let c = <HTMLCanvasElement> document.getElementById('gameBoard');
+				if (typeof c !== 'undefined') {
+					let ctx = <CanvasRenderingContext2D> c.getContext('2d');
+					// console.log(ctx);
+					ctx.fillStyle = '#0f8f2f';
+					ctx.fillRect(0, 0, 400, 400);
+
+					if ('game' in res) {
+						this.status = res.game.status;
+						console.log(res.game);
+						switch (res.game.status) {
+						  case 0:
+							  // display message on game board: Invite someone to play
+							  break;
+						  case 1:
+							  // hide send invite form
+							  // show cancel invite button
+							  // display message on game board: Waiting for invitation to be accepted
+							  break;
+						  case 2:
+							  // build game oject from results
+							  // draw game board
+							  break;
+						  default:
+							  console.log('error: game: ' + res.id + ': status: ' + res.game.status + ' not recognized');
+						}
+					} else {
+						this.status = 0;
+					}
+				}
+			});
+		});
+	}
+
 
 	drawGameBoard(gameBoard) {
 		let c = <HTMLCanvasElement> document.getElementById('gameBoard');

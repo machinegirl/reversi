@@ -4,6 +4,7 @@ import 'reflect-metadata';
 import 'zone.js/dist/zone';
 import {bootstrap} from '@angular/platform-browser-dynamic';
 import {HTTP_PROVIDERS} from '@angular/http';
+import {Location} from '@angular/common';
 
 import './index.less';
 import './app/main.less';
@@ -33,6 +34,7 @@ if (process.env.NODE_ENV === 'production') {
 
 bootstrap(UiView, [
   ...UIROUTER_PROVIDERS, HTTP_PROVIDERS, AUTH_PROVIDERS,
+  provide(Location, {useClass: Location}),
   provide(ReversiService, {useClass: ReversiService}),
   provide(LocationStrategy, {useClass: PathLocationStrategy}),
   provide(PlatformLocation, {useClass: BrowserPlatformLocation}),
