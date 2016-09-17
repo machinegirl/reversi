@@ -19,5 +19,19 @@ describe('The backend Reversi library', () => {
             })).toBeTruthy();
         });
 
+        it('requires sub claim', () => {
+            var f = this.reversi.makeAccessToken.bind(this, {
+                sub: '',
+                email: '',
+                email_verified: true,
+                name: '',
+                picture: '',
+                given_name: '',
+                family_name: '',
+                locale: ''
+            });
+            expect(f).toThrow();
+        });
+
     });
 });
