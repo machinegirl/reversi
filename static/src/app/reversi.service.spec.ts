@@ -33,9 +33,8 @@ describe('reversi service', () => {
 
     describe('play', () => {
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 10;
-
         it('should return true', () => {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 10;
             expect(true).toBe(true);
         });
     });
