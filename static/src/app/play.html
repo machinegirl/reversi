@@ -6,6 +6,12 @@
 
 	<div class="player">
 		<Player></Player>
-		<p><input type="email" [(ngModel)]="opponentEmail"><button (click)="invite()">Invite Opponent</button></p>
+		<p *ngIf="status === 0">
+			<input type="email" [(ngModel)]="opponentEmail">
+			<button (click)="invite()">Invite Opponent</button>
+		</p>
+		<p *ngIf="status === 1">
+			<button (click)="cancelInvite()">Cancel Invitation</button>
+		</p>
 	</div>
 </div>

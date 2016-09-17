@@ -43,22 +43,6 @@ export class ReversiService {
 					// 	[0, 0, 0, 0, 0, 0, 0, 0],
 					// 	[0, 0, 0, 0, 0, 0, 0, 0]
 					// ];
-
-					// TODO: Move this somewhere else so init() can be idempotent.
-					if (window.location.pathname === '/play') {
-						let c = <HTMLCanvasElement> document.getElementById('gameBoard');
-						if (typeof c !== 'undefined') {
-							let ctx = <CanvasRenderingContext2D> c.getContext('2d');
-							// console.log(ctx);
-							ctx.fillStyle = '#0f8f2f';
-							ctx.fillRect(0, 0, 400, 400);
-
-							// this.drawGameBoard(gameBoard);
-						} else {
-							// console.log('c: ' + c);
-						}
-					}
-
 					callback();
 				});
 			});

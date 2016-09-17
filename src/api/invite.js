@@ -13,3 +13,11 @@ module.exports.accept_invite = (e, ctx, callback) => {
         callback(null, {'invite': invite, 'accessToken': accessToken});
     });
 }
+
+module.exports.cancel_invite = (e, ctx, callback) => {
+    reversi.logged_in(e, ctx, callback, (accessToken) => {
+        reversi.cancel_invite(e, ctx, callback, accessToken, () => {
+            callback(null, {succes: true});
+        });
+    });
+}

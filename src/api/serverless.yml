@@ -156,6 +156,24 @@ functions:
                         - X-Amz-Security-Token
                         - X-Reversi-Auth
 
+    cancelInvite:
+        handler: invite.cancel_invite
+        events:
+            - http:
+                path: invite
+                method: delete
+                private: true
+                cors:
+                    origins:
+                        - '*'
+                    headers:
+                        - Content-Type
+                        - X-Amz-Date
+                        - Authorization
+                        - X-Api-Key
+                        - X-Amz-Security-Token
+                        - X-Reversi-Auth
+
 
     getUser:
         handler: user.get

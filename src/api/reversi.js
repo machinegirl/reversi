@@ -522,7 +522,7 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
     db.createDomain({DomainName: 'reversi-invite'}, (err, data) => {
 
         if (err) {
-            console.log('Error creating reversi-game domain');
+            console.log('Error creating reversi-invite domain');
             console.log(JSON.stringify(err));
             // callback2(accessToken);
             // return;
@@ -576,8 +576,21 @@ module.exports.send_invite = function(e, ctx, callback, accessToken, callback2) 
                     else {
                         console.log('===EMAIL SENT===');
                         console.log(JSON.stringify(data));
-
-                        callback2(data);
+                        db.putAttributes({
+                            DomainName: 'reversi-game',
+                            ItemName: game,
+                            Attributes: module.exports.serialize({
+                                status: [1, true]
+                            })
+                        }, (err, data) => {
+                            if (err) {
+                                console.log('error putting status into game');
+                                console.log(JSON.parse(err));
+                                callback(err);
+                                return;
+                            }
+                            callback2(data);
+                        });
                     }
                 });
                 console.log('EMAIL CODE END');
@@ -618,6 +631,7 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                 console.log('acceptInvite invite');
                 console.log(invite);
 
+
                 db.createDomain({DomainName: 'reversi-game'}, (err, data) => {
                     if (err) {
                         console.log(JSON.stringify(err));
@@ -628,9 +642,18 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
                     db.putAttributes({
                         DomainName: 'reversi-game',
                         ItemName: invite.game,
-                        Attributes: module.exports.serialize({
-                                'player-1': [idToken.sub, false]
-                            })
+                        Attributes: module.exports.serialize(
+                            {
+                                'player-1': [idToken.sub, false],
+                                'status': [2, true]
+                            }
+                        ),
+                        Expected: {
+                            Name: 'status',
+                            Value: '1',
+                            Exists: true
+                        }
+
                         }, (err, data) => {
                             if (err) {
                                 console.log('error putting players into game');
@@ -658,6 +681,14 @@ module.exports.acceptInvite = function(e, ctx, callback, idToken, callback2) {
 
     });
 };
+
+module.exports.cancel_invite = function(e, ctx, callback, accessToken, callback2) {
+    var game = JSON.parse(e.query.game);
+
+    // get game from db
+    // set status on game to 0
+    // look up invitation by game and delete it
+}
 
 module.exports.createFriendship = function(invite, idToken, callback, callback2) {
 
@@ -736,7 +767,7 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                             })
                         }, (err, data) => {
                             if (err) {
-                                console.log('error putting inviterInvitee into reversi-friend');
+                                console.log('error putting inviteeInviter into reversi-friend');
                                 console.log(JSON.stringify(err));
                                 callback(err);
                                 return;
@@ -748,32 +779,36 @@ module.exports.createFriendship = function(invite, idToken, callback, callback2)
                 }
             } else { // Make new inviterInvitee and inviteeInviter
                 console.log('make new inviterInvitee and inviteeInviter');
+                var items = [
+                    {
+                        Name: invite.inviter + '-' + idToken.sub,
+                        Attributes: module.exports.serialize({
+                            name: [idToken.name, true],
+                            email: [idToken.email, true],
+                            play_count: [0, true],
+                            wins: [0, true]
+                        })
+                    },
+                ];
+                if (invite.inviter !== idToken.sub) {
+                    items.push(
+                        {
+                            Name: idToken.sub + '-' + invite.inviter,
+                            Attributes: module.exports.serialize({
+                                name: [user.name, true],
+                                email: [user.email, true],
+                                play_count: [0, true],
+                                wins: [0, true]
+                            })
+                        });
+                }
                 module.exports.getUserBySub(invite.inviter, callback, (user) => {
                     db.batchPutAttributes({
                         DomainName: 'reversi-friend',
-                        Items: [
-                            {
-                                Name: invite.inviter + '-' + idToken.sub,
-                                Attributes: module.exports.serialize({
-                                    name: [idToken.name, true],
-                                    email: [idToken.email, true],
-                                    play_count: [0, true],
-                                    wins: [0, true]
-                                })
-                            },
-                            {
-                                ItemName: idToken.sub + '-' + invite.inviter,
-                                Attributes: module.exports.serialize({
-                                    name: [user.name, true],
-                                    email: [user.email, true],
-                                    play_count: [0, true],
-                                    wins: [0, true]
-                                })
-                            }
-                        ]
+                        Items: items
                     }, (err, data) => {
                         if (err) {
-                            console.log('error putting inviterInvitee into reversi-friend');
+                            console.log('error putting inviterInvitee and inviterInvitee into reversi-friend');
                             console.log(JSON.stringify(err));
                             callback(err);
                             return;
