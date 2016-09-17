@@ -1,6 +1,6 @@
 const conf = require('./gulp.conf');
 
-module.exports = function (config) {
+module.exports = function(config) {
   const configuration = {
     basePath: '../',
     singleRun: true,
@@ -10,7 +10,8 @@ module.exports = function (config) {
       outputDir: 'test-reports'
     },
     browsers: [
-      'Chrome'
+      'Chrome',
+      'Firefox'
     ],
     frameworks: [
       'jasmine'
@@ -43,6 +44,7 @@ module.exports = function (config) {
       require('karma-junit-reporter'),
       require('karma-coverage'),
       require('karma-chrome-launcher'),
+      require('karma-firefox-launcher'),
       require('karma-webpack')
     ]
   };
