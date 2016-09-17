@@ -2,7 +2,7 @@ import { Injectable} from '@angular/core';
 import {JwtHelper} from 'angular2-jwt';
 import { Http, Response, Headers, RequestMethod, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import {Location} from '@angular/common';
+// import {Location} from '@angular/common';
 
 declare var PubNub: any;
 
@@ -34,7 +34,7 @@ export class ReversiService {
 	pubnub2: any;
 
 
-	constructor(public http: Http, private location: Location) {
+	constructor(public http: Http) {
 
 	}
 
@@ -230,7 +230,7 @@ export class ReversiService {
 				}
 			  //   this.reversiService.loadGame(game);
 				let id = res.id;
-				this.location.replaceState('/play', 'game='+id);
+				window.history.replaceState({}, document.title, '/play?game='+id);
 				let c = <HTMLCanvasElement> document.getElementById('gameBoard');
 				if (typeof c !== 'undefined') {
 					let ctx = <CanvasRenderingContext2D> c.getContext('2d');
