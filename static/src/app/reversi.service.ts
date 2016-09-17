@@ -21,6 +21,12 @@ export class ReversiService {
 	apiConfLoaded: boolean;
 	pubnubConfLoaded: boolean;
 	googleIdentityPlatformKeyLoaded: boolean;
+	name: string;
+	email: string;
+	gamesPlayed: number;
+	gamesWon: number;
+	numFriends: number;
+	friends: any;
 
 	constructor(public http: Http) {
 
@@ -74,7 +80,7 @@ export class ReversiService {
 		  let errMsg = (error.message) ? error.message :
 		  error.status ? `${error.status} - ${error.statusText}` : 'Server error';
 		  console.log('!!error!!');
-		  console.log(errMsg);
+		  console.log(error);
 		  return Observable.throw(errMsg);
 		});
 

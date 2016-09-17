@@ -39,12 +39,21 @@ export class Dashboard implements OnInit {
                 // GET /user
                 this.reversiService.getUser(accessToken, (res) => {
 
-                    // TODO: Set view vars from res.
+                    // Set view vars from res.
+                    console.log('!!');
+                    console.log(res);
+
+                    this.reversiService.name = res.name;
+                    this.reversiService.email = res.email;
+                    this.reversiService.gamesPlayed = res.games_played;
+                    this.reversiService.gamesWon = res.games_won;
+                    this.reversiService.numFriends = res.friend.length;
 
                     // GET /friend?id=[23423432, 76765645, etc.]
                     this.reversiService.getFriend(accessToken, res.friend, (res) => {
 
-                        // TODO: Set view vars from res.
+                        // Set view vars from res.
+                        this.reversiService.friends = Object.keys(res).map(key => res[key]);
                     });
                 });
             });

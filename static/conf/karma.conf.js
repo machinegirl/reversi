@@ -17,8 +17,13 @@ module.exports = function (config) {
     ],
     files: [
       'node_modules/es6-shim/es6-shim.js',
-      conf.path.src('index.spec.js')
+      conf.path.src('index.spec.js'),
+      {pattern: 'src/assets/**/*.key', watched: true, served: true, included: false},
+      {pattern: 'src/assets/**/*.conf', watched: true, served: true, included: false}
     ],
+    proxies: {
+        "/assets/": "/base/src/assets/"
+    },
     preprocessors: {
       [conf.path.src('index.spec.js')]: [
         'webpack'
