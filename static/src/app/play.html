@@ -4,13 +4,12 @@
 		<canvas id="gameBoard" width="400" height="400" (click)="move($event)"></canvas>
 	</div>
 
-	<div class="player">
-		<Player></Player>
-		<p *ngIf="status === 0">
+	<div class="sidebar">
+		<p *ngIf="reversiService.status === 0">
 			<input type="email" [(ngModel)]="opponentEmail">
 			<button (click)="invite()">Invite Opponent</button>
 		</p>
-		<p *ngIf="status === 1">
+		<p *ngIf="reversiService.status === 1">
 			<button (click)="cancelInvite()">Cancel Invitation</button>
 		</p>
 	</div>
