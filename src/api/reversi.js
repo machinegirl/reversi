@@ -315,7 +315,7 @@ module.exports.logged_in = function(e, ctx, callback, callback2) {
         algorithms: ['RS256'],
         audience: apiConf.api_prefix + apiConf.api_stage,
         issuer: apiConf.api_prefix + apiConf.api_stage
-    }
+    };
 
     console.log('logged_in accessToken:');
     console.log(accessToken);
